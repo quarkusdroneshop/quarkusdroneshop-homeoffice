@@ -22,56 +22,42 @@ public class OrderService {
 
     private List<Order> orders = new ArrayList<>();
 
-/*
-    @PostConstruct
-    private void setUp() {
-        orders.addAll(Stream.generate(this::mockOrder).limit(100).collect(Collectors.toList()));
-    }
-
-    public List<Order> allOrders() {
-        return orders;
-    }
-
-*/
     @Transactional
-    public void mockOrder() {
+    public void mockAndPersistOrder() {
+        mockOrder().persist();
+    }
+
+    protected Order mockOrder() {
 
         Instant orderCompletedTimestamp = Instant.now();
-        Instant orderPlacedTimestamp = orderCompletedTimestamp.minus(makeTime(), ChronoUnit.MINUTES);
+        Instant  orderPlacedTimestamp = orderCompletedTimestamp.minus(makeTime(), ChronoUnit.MINUTES);
         List<LineItem> lineItems = mockLineItems();
 
-/*
-        order.setId(UUID.randomUUID().toString());
-        order.setLineItems(lineItems);
-        order.setLocationId(randomLocation());
-        order.setOrderPlacedTimestamp(orderPlacedTimestamp);
-        order.setOrderCompletedTimestamp(orderCompletedTimestamp);
-        order.setCustomerLoyaltyId(randomCustomerLoyaltyId());
-*/
-
         Order order = new Order(UUID.randomUUID().toString(),
-                    lineItems,
-                    randomOrderSource(),
-                    randomLocation(),
-                    randomCustomerLoyaltyId(),
-                    orderPlacedTimestamp,
-                    orderCompletedTimestamp);
+                lineItems,
+                randomOrderSource(),
+                randomLocation(),
+                randomCustomerLoyaltyId(),
+                orderPlacedTimestamp,
+                orderCompletedTimestamp);
 
-        logger.debug("persisting {} ", order);
-        order.persist();
+        logger.debug("mocked {} ", order);
+        return order;
     }
 
     private long makeTime() {
        boolean valid = false;
        long rand = 1L;
         while (!valid) {
-            rand = 1L + (long) (Math.random() * (1L - 10L));
+            rand = 1L + (long) (Math.random() * (10L - 1L));
+            logger.debug("random time of {}", rand);
             if (rand <= 4) {
                 valid = true;
             }else if(rand % 3 == 0){
                 valid = true;
             }
         }
+        logger.debug("returning random time of {}", rand);
         return rand;
     }
 
@@ -127,7 +113,7 @@ public class OrderService {
 
     private LineItem mockKitchenItem() {
         Item item = randomKitchenItem();
-        return new LineItem(item, item.getPrice());
+        return new LineItem(item, item.getPrice(), randomCook());
     }
 
     Item randomBaristaItem() {
@@ -136,10 +122,115 @@ public class OrderService {
 
     private LineItem mockBeverage() {
         Item item = randomBaristaItem();
-        return new LineItem(item, item.getPrice());
+        return new LineItem(item, item.getPrice(), randomBarista());
     }
 
     private Item randomKitchenItem() {
         return Item.values()[new Random().nextInt(3) + 5];
     }
+
+    private final String randomBarista() {
+        return randomName(baristas);
+    }
+
+    private final String randomCook() {
+        return randomName(cooks);
+    }
+
+    private String randomName(final List<String> names) {
+
+        Collections.shuffle(names);
+        Random rand = new Random();
+        return names.get(rand.nextInt(names.size()));
+    }
+
+    static final List<String> baristas = Arrays.asList(
+            "Hortelano H",
+            "Chip B",
+            "Lisa B",
+            "Kelvina B",
+            "Carlo C",
+            "Mario C",
+            "Ginny R",
+            "Freddy G",
+            "Arvind K",
+            "Alex L",
+            "Jose N",
+            "Jilani P",
+            "Henok T",
+            "Hilda T",
+            "Steve W",
+            "Edgar E",
+            "Michele J",
+            "Anthony G",
+            "Seza B",
+            "Kelvin R",
+            "Sachin A",
+            "Mohammed L",
+            "Chris S",
+            "David N",
+            "Martin a",
+            "Lawrence D",
+            "Drewry M");
+
+    static final List<String> cooks = Arrays.asList(
+            "Chidambaram C",
+            "Larsson L",
+            "premkumar p",
+            "Jaganaathan J",
+            "Fokou F",
+            "Paul P",
+            "Regas R",
+            "Doshi d",
+            "Maddali M",
+            "Sangem S",
+            "Sangem S",
+            "Mateti M",
+            "Bergh B",
+            "Sinha S",
+            "Sahu S",
+            "Birkenberger B",
+            "Burrell B",
+            "Calingasan C",
+            "Durning D",
+            "Gaitan G",
+            "Gomez P",
+            "Seth S",
+            "Babaoglu B",
+            "DesPres D",
+            "Morris M",
+            "iStefan L",
+            "Prasanth p",
+            "Raghu J",
+            "Etienne F",
+            "Avik P",
+            "Valarie R",
+            "smita d",
+            "Ram M",
+            "Lisa B",
+            "Kelvina B",
+            "Carlo C",
+            "Mario C",
+            "Marilyn D",
+            "Freddy G",
+            "Arvin H",
+            "Rajesh K",
+            "Alex L",
+            "Ned N",
+            "Jose N",
+            "Jilani P",
+            "Henok T",
+            "Hilda T",
+            "Steve W",
+            "Edgar E",
+            "Michele J",
+            "Anthony G",
+            "Gaurav S",
+            "Seza B",
+            "Partha K",
+            "Steve B",
+            "Martin a",
+            "Lawrence D");
+
+
 }

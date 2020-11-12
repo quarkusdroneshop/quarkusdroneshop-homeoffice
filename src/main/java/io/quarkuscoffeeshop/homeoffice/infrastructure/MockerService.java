@@ -30,7 +30,7 @@ public class MockerService  implements QuarkusApplication {
         while (running == true) {
             try {
                 Thread.sleep((new Random().nextInt(3)+1) * 1000);
-                orderService.mockOrder();
+                orderService.mockAndPersistOrder();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

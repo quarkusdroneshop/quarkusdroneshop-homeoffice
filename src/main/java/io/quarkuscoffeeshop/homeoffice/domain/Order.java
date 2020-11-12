@@ -2,15 +2,16 @@ package io.quarkuscoffeeshop.homeoffice.domain;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import org.graalvm.nativeimage.c.struct.UniqueLocationIdentity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
-import javax.sound.sampled.Line;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.StringJoiner;
 
 @Entity @Table(name="Orders") @RegisterForReflection
 public class Order extends PanacheEntityBase {
@@ -105,7 +106,7 @@ public class Order extends PanacheEntityBase {
         if (this.lineItems == null) {
             this.lineItems = new ArrayList<>();
         }
-        this.lineItems.add(new LineItem(lineItem.getItem(), lineItem.getPrice(), this));
+        this.lineItems.add(new LineItem(lineItem.getItem(), lineItem.getPrice(), lineItem.getPreparedBy(), this));
     }
 
     public String getId() {
