@@ -10,9 +10,9 @@ public enum Item {
     //Food
     CAKEPOP(2.50), CROISSANT(3.25), MUFFIN(3.00), CROISSANT_CHOCOLATE(3.50);
 
-    private BigDecimal price;
+    private final BigDecimal price;
 
-    private Item(double price) {
+    Item(double price) {
         this.price = BigDecimal.valueOf(price);
     }
 

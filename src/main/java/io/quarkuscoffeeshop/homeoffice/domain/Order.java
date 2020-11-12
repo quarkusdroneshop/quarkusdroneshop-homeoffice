@@ -1,18 +1,28 @@
 package io.quarkuscoffeeshop.homeoffice.domain;
 
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import org.graalvm.nativeimage.c.struct.UniqueLocationIdentity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.persistence.*;
+import javax.sound.sampled.Line;
 import java.math.BigDecimal;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.StringJoiner;
+import java.time.Instant;
+import java.util.*;
 
-@RegisterForReflection
-public class Order {
+@Entity @Table(name="Orders") @RegisterForReflection
+public class Order extends PanacheEntityBase {
 
+    @Transient
+    static Logger logger = LoggerFactory.getLogger(Order.class);
+
+    @Id
     private String id;
 
-    private Collection<LineItem> lineItems;
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "order", cascade = CascadeType.ALL)
+    private List<LineItem> lineItems;
 
     BigDecimal total;
 
@@ -20,13 +30,29 @@ public class Order {
 
     String locationId;
 
+    String customerLoyaltyId;
+
+    Instant orderPlacedTimestamp;
+
+    Instant orderCompletedTimestamp;
+
     public Order() {
     }
 
-    public Order(String id, Collection<LineItem> lineItems, BigDecimal total) {
+    public Order(String id, List<LineItem> lineItems, OrderSource orderSource, String locationId, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
         this.id = id;
-        this.lineItems = lineItems;
-        this.total = total;
+        lineItems.forEach(lineItem -> {
+            addLineItem(lineItem);
+        });
+        this.orderSource = orderSource;
+        this.locationId = locationId;
+        this.customerLoyaltyId = customerLoyaltyId;
+        this.orderPlacedTimestamp = orderPlacedTimestamp;
+        this.orderCompletedTimestamp = orderCompletedTimestamp;
+        this.total = lineItems
+                .stream()
+                .map(item -> item.getPrice())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     @Override
@@ -35,6 +61,11 @@ public class Order {
                 .add("id='" + id + "'")
                 .add("lineItems=" + lineItems)
                 .add("total=" + total)
+                .add("orderSource=" + orderSource)
+                .add("locationId='" + locationId + "'")
+                .add("customerLoyaltyId='" + customerLoyaltyId + "'")
+                .add("orderPlacedTimestamp=" + orderPlacedTimestamp)
+                .add("orderCompletedTimestamp=" + orderCompletedTimestamp)
                 .toString();
     }
 
@@ -42,15 +73,39 @@ public class Order {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Order order = (Order) o;
-        return Objects.equals(id, order.id) &&
-                Objects.equals(lineItems, order.lineItems) &&
-                Objects.equals(total, order.total);
+
+        if (id != null ? !id.equals(order.id) : order.id != null) return false;
+        if (lineItems != null ? !lineItems.equals(order.lineItems) : order.lineItems != null) return false;
+        if (total != null ? !total.equals(order.total) : order.total != null) return false;
+        if (orderSource != order.orderSource) return false;
+        if (locationId != null ? !locationId.equals(order.locationId) : order.locationId != null) return false;
+        if (customerLoyaltyId != null ? !customerLoyaltyId.equals(order.customerLoyaltyId) : order.customerLoyaltyId != null)
+            return false;
+        if (orderPlacedTimestamp != null ? !orderPlacedTimestamp.equals(order.orderPlacedTimestamp) : order.orderPlacedTimestamp != null)
+            return false;
+        return orderCompletedTimestamp != null ? orderCompletedTimestamp.equals(order.orderCompletedTimestamp) : order.orderCompletedTimestamp == null;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, lineItems, total);
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (lineItems != null ? lineItems.hashCode() : 0);
+        result = 31 * result + (total != null ? total.hashCode() : 0);
+        result = 31 * result + (orderSource != null ? orderSource.hashCode() : 0);
+        result = 31 * result + (locationId != null ? locationId.hashCode() : 0);
+        result = 31 * result + (customerLoyaltyId != null ? customerLoyaltyId.hashCode() : 0);
+        result = 31 * result + (orderPlacedTimestamp != null ? orderPlacedTimestamp.hashCode() : 0);
+        result = 31 * result + (orderCompletedTimestamp != null ? orderCompletedTimestamp.hashCode() : 0);
+        return result;
+    }
+
+    public void addLineItem(final LineItem lineItem) {
+        if (this.lineItems == null) {
+            this.lineItems = new ArrayList<>();
+        }
+        this.lineItems.add(new LineItem(lineItem.getItem(), lineItem.getPrice(), this));
     }
 
     public String getId() {
@@ -65,7 +120,7 @@ public class Order {
         return lineItems;
     }
 
-    public void setLineItems(Collection<LineItem> lineItems) {
+    public void setLineItems(List<LineItem> lineItems) {
         this.lineItems = lineItems;
     }
 
@@ -73,7 +128,43 @@ public class Order {
         return total;
     }
 
-    public void setTotal(BigDecimal total) {
-        this.total = total;
+    public OrderSource getOrderSource() {
+        return orderSource;
+    }
+
+    public void setOrderSource(OrderSource orderSource) {
+        this.orderSource = orderSource;
+    }
+
+    public String getLocationId() {
+        return locationId;
+    }
+
+    public void setLocationId(String locationId) {
+        this.locationId = locationId;
+    }
+
+    public String getCustomerLoyaltyId() {
+        return customerLoyaltyId;
+    }
+
+    public void setCustomerLoyaltyId(String customerLoyaltyId) {
+        this.customerLoyaltyId = customerLoyaltyId;
+    }
+
+    public Instant getOrderPlacedTimestamp() {
+        return orderPlacedTimestamp;
+    }
+
+    public void setOrderPlacedTimestamp(Instant orderPlacedTimestamp) {
+        this.orderPlacedTimestamp = orderPlacedTimestamp;
+    }
+
+    public Instant getOrderCompletedTimestamp() {
+        return orderCompletedTimestamp;
+    }
+
+    public void setOrderCompletedTimestamp(Instant orderCompletedTimestamp) {
+        this.orderCompletedTimestamp = orderCompletedTimestamp;
     }
 }
