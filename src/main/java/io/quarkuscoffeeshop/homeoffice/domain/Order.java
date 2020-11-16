@@ -27,6 +27,7 @@ public class Order extends PanacheEntityBase {
 
     BigDecimal total;
 
+    @Enumerated(EnumType.STRING)
     OrderSource orderSource;
 
     String locationId;

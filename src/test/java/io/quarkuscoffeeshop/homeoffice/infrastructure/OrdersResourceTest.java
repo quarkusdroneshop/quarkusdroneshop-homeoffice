@@ -10,12 +10,12 @@ import static org.hamcrest.CoreMatchers.is;
 public class OrdersResourceTest {
 
     @Test
-    public void testHelloEndpoint() {
+    public void testAllOrdersEndpoint() {
         given()
-          .when().get("/api/orders")
+          .when()
+            .get("/graphql-ui/")
           .then()
-             .statusCode(200)
-             .body(is("hello"));
+             .statusCode(200);
     }
 
 }

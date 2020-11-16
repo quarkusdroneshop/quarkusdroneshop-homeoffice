@@ -1,6 +1,6 @@
 package io.quarkuscoffeeshop.homeoffice.domain;
 
-public enum Locations {
+public enum StoreLocation {
 
     RALEIGH, ATLANTA, CHARLOTTE;
 
