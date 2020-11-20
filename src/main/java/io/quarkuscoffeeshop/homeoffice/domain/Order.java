@@ -1,17 +1,17 @@
 package io.quarkuscoffeeshop.homeoffice.domain;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.panache.common.Parameters;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import io.smallrye.graphql.api.Scalar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.StringJoiner;
+import java.time.LocalDate;
+import java.util.*;
 
 @Entity @Table(name="Orders") @RegisterForReflection
 public class Order extends PanacheEntityBase {
@@ -168,5 +168,13 @@ public class Order extends PanacheEntityBase {
 
     public void setOrderCompletedTimestamp(Instant orderCompletedTimestamp) {
         this.orderCompletedTimestamp = orderCompletedTimestamp;
+    }
+
+    public static List<Order> findBetween(Instant startDate, Instant endDate) {
+        logger.debug("Searching date between: {} and {}", startDate, endDate);
+        return find("orderPlacedTimestamp BETWEEN :startDate AND :endDate",
+                Parameters.with("startDate", startDate)
+                .and("endDate", endDate)
+        ).list();
     }
 }

@@ -131,7 +131,9 @@ public class OrderService {
 
     protected Order mockOrder() {
 
-        Instant orderCompletedTimestamp = Instant.now();
+        //the order happened in the last 7 days
+        Instant orderCompletedTimestamp = Instant.now().minus((int) (Math.random() * 7), ChronoUnit.DAYS);
+
         Instant orderPlacedTimestamp = orderCompletedTimestamp.minus(makeTime(), ChronoUnit.MINUTES);
         StoreLocation storeLocation = randomLocation();
         List<LineItem> lineItems = mockLineItems(storeLocation);
