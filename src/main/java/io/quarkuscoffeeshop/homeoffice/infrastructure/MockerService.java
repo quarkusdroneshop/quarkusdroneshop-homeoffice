@@ -14,7 +14,7 @@ public class MockerService  implements QuarkusApplication {
     final Logger logger = LoggerFactory.getLogger(MockerService.class);
 
     @Inject
-    OrderService orderService;
+    OrderMocker orderMocker;
 
     private boolean running = true;
 
@@ -30,7 +30,7 @@ public class MockerService  implements QuarkusApplication {
         while (running == true) {
             try {
                 Thread.sleep((new Random().nextInt(3)+1) * 1000);
-                orderService.mockAndPersistOrder();
+                orderMocker.mockAndPersistOrder();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
