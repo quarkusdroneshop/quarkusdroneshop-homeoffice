@@ -2,12 +2,14 @@ package io.quarkuscoffeeshop.homeoffice.infrastructure;
 
 import io.quarkuscoffeeshop.homeoffice.domain.Order;
 import io.quarkuscoffeeshop.homeoffice.domain.StoreLocation;
-import org.eclipse.microprofile.graphql.*;
+import org.eclipse.microprofile.graphql.Description;
+import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Name;
+import org.eclipse.microprofile.graphql.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.HashMap;
 import java.util.List;
 
 @GraphQLApi
@@ -25,6 +27,15 @@ public class OrdersResource {
         return orderService.allOrders();
     }
 
+    /**
+     * query{
+     *   allOrdersByLocation(locationId: ATLANTA){
+     *     id
+     *   }
+     * }
+     * @param storeLocation
+     * @return
+     */
     @Query("allOrdersByLocation")
     @Description("Get all orders from a single location")
     public List<Order> allOrdersByLocation(@Name("locationId") StoreLocation storeLocation) {

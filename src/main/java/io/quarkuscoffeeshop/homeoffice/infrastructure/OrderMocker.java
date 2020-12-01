@@ -142,7 +142,7 @@ public class OrderMocker {
         Order order = new Order(UUID.randomUUID().toString(),
                 lineItems,
                 randomOrderSource(),
-                storeLocation.toString(),
+                storeLocation,
                 randomCustomerLoyaltyId(),
                 orderPlacedTimestamp,
                 orderCompletedTimestamp);
