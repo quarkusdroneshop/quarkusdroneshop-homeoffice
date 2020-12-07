@@ -30,7 +30,8 @@ public class Order extends PanacheEntityBase {
     @Enumerated(EnumType.STRING)
     OrderSource orderSource;
 
-    String locationId;
+    @Enumerated(EnumType.STRING)
+    StoreLocation locationId;
 
     String customerLoyaltyId;
 
@@ -41,7 +42,7 @@ public class Order extends PanacheEntityBase {
     public Order() {
     }
 
-    public Order(String id, List<LineItem> lineItems, OrderSource orderSource, String locationId, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
+    public Order(String id, List<LineItem> lineItems, OrderSource orderSource, StoreLocation locationId, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
         this.id = id;
         lineItems.forEach(lineItem -> {
             addLineItem(lineItem);
@@ -138,11 +139,11 @@ public class Order extends PanacheEntityBase {
         this.orderSource = orderSource;
     }
 
-    public String getLocationId() {
+    public StoreLocation getLocationId() {
         return locationId;
     }
 
-    public void setLocationId(String locationId) {
+    public void setLocationId(StoreLocation locationId) {
         this.locationId = locationId;
     }
 

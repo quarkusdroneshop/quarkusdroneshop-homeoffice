@@ -7,6 +7,7 @@ import io.smallrye.graphql.api.Scalar;
 import org.antlr.v4.runtime.misc.Pair;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +29,10 @@ public class OrdersResource {
     @Inject
     OrderService orderService;
 
-    //@Query("orders")
-    @Query
+    @Query("allOrders")
     @Description("Get all orders from all stores")
-    public List<Order> getOrders() {
+    public List<Order> allOrders() {
+
         return Order.listAll();
     }
 

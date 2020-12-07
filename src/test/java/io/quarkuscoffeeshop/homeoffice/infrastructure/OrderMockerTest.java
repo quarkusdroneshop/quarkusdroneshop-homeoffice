@@ -12,16 +12,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
-public class OrderServiceTest {
+public class OrderMockerTest {
 
-    Logger logger = LoggerFactory.getLogger(OrderServiceTest.class);
+    Logger logger = LoggerFactory.getLogger(OrderMockerTest.class);
 
     @Inject
-    OrderService orderService;
+    OrderMocker orderMocker;
 
     @Test
     public void testMockOrders() {
-        Order order = orderService.mockOrder();
+        Order order = orderMocker.mockOrder();
         assertNotNull(order);
         logger.info("{}", order);
         assertTrue(order.getOrderPlacedTimestamp().isBefore(order.getOrderCompletedTimestamp()));
