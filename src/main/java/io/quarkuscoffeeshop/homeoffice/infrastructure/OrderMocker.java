@@ -134,7 +134,9 @@ public class OrderMocker {
 
     protected Order mockOrder() {
 
-        Instant orderCompletedTimestamp = Instant.now();
+        //set the order date to random in the last week - backfill data is necessary for analytics
+        //is this a problem for other use cases?
+        Instant orderCompletedTimestamp = Instant.now().minus((int) (Math.random() * 7), ChronoUnit.DAYS);
         Instant orderPlacedTimestamp = orderCompletedTimestamp.minus(makeTime(), ChronoUnit.MINUTES);
         StoreLocation storeLocation = randomLocation();
         List<LineItem> lineItems = mockLineItems(storeLocation);
@@ -142,7 +144,7 @@ public class OrderMocker {
         Order order = new Order(UUID.randomUUID().toString(),
                 lineItems,
                 randomOrderSource(),
-                storeLocation,
+                storeLocation.toString(),
                 randomCustomerLoyaltyId(),
                 orderPlacedTimestamp,
                 orderCompletedTimestamp);

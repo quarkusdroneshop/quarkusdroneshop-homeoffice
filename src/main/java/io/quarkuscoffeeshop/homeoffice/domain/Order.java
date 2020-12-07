@@ -30,8 +30,9 @@ public class Order extends PanacheEntityBase {
     @Enumerated(EnumType.STRING)
     OrderSource orderSource;
 
-    @Enumerated(EnumType.STRING)
-    StoreLocation locationId;
+    //@Enumerated(EnumType.STRING)
+    //StoreLocation locationId;
+    String locationId;
 
     String customerLoyaltyId;
 
@@ -42,7 +43,7 @@ public class Order extends PanacheEntityBase {
     public Order() {
     }
 
-    public Order(String id, List<LineItem> lineItems, OrderSource orderSource, StoreLocation locationId, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
+    public Order(String id, List<LineItem> lineItems, OrderSource orderSource, String locationId, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
         this.id = id;
         lineItems.forEach(lineItem -> {
             addLineItem(lineItem);
@@ -139,11 +140,11 @@ public class Order extends PanacheEntityBase {
         this.orderSource = orderSource;
     }
 
-    public StoreLocation getLocationId() {
+    public String getLocationId() {
         return locationId;
     }
 
-    public void setLocationId(StoreLocation locationId) {
+    public void setLocationId(String locationId) {
         this.locationId = locationId;
     }
 
@@ -179,7 +180,7 @@ public class Order extends PanacheEntityBase {
         ).list();
     }
 
-    public static List<Order> findBetweenForLocation(String location, Instant startDate, Instant endDate) {
+    public static List<Order> findBetweenForLocation(StoreLocation location, Instant startDate, Instant endDate) {
         logger.debug("Searching date between: {} and {} for {}", startDate, endDate, location);
         return find("locationId = :location AND orderPlacedTimestamp BETWEEN :startDate AND :endDate",
                 Parameters.with("location", location)

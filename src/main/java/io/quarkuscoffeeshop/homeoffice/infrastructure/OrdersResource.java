@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @GraphQLApi
 public class OrdersResource {
@@ -36,7 +37,24 @@ public class OrdersResource {
         return Order.listAll();
     }
 
-
+    /*
+    Example Query
+    query orders {
+      ordersForLocation(locationId: "ATLANTA") {
+        id
+        locationId
+        lineItems {
+          id
+          item
+          price
+          preparedBy
+        }
+        total,
+        orderPlacedTimestamp,
+        orderCompletedTimestamp
+      }
+    }
+     */
     @Query
     @Description("Get all orders from store by locationId")
     public List<Order> getOrdersForLocation(String locationId) {
@@ -176,6 +194,12 @@ public class OrdersResource {
         //I have to come document this - a lot of Hashtable work to get a count of unique items sold by servers by location
         List<StoreServerSales> storeServerSalesList = new ArrayList<>();
 
+        Instant start = Instant.parse(startDate + "T00:00:00Z");
+        Instant end = Instant.parse(endDate + "T00:00:00Z");
+        List<Order> allOrders = Order.findBetween(start, end);
+
+        logger.debug("allOrders: " + allOrders.size());
+
         for (StoreLocation location : StoreLocation.values()) {
 
             Hashtable servers = new Hashtable();
@@ -184,11 +208,9 @@ public class OrdersResource {
             //this is so much easier using LINQ with entity framework in C#
             List<LineItem> locationLineItems = new ArrayList<>();
 
-            Instant start = Instant.parse(startDate + "T00:00:00Z");
-            Instant end = Instant.parse(endDate + "T00:00:00Z");
-
             //List<Order> locationOrders = Order.list("locationId", location.name());
-            List<Order> orders = Order.findBetweenForLocation(location.name(),start, end);
+            List<Order> orders = allOrders.stream().filter(order -> order.getLocationId().equals(location.name())).collect(Collectors.toList());
+
             for( Order order : orders){
                 locationLineItems.addAll(order.getLineItems());
             }
@@ -242,7 +264,7 @@ public class OrdersResource {
 
         }
 
-        //logger.debug("stores: " + storeServerSalesList.size());
+        logger.debug("stores: " + storeServerSalesList.size());
         return storeServerSalesList;
     }
 }
