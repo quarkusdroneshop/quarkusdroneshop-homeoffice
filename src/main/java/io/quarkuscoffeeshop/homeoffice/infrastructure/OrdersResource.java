@@ -186,8 +186,8 @@ public class OrdersResource {
             Instant start = Instant.parse(startDate + "T00:00:00Z");
             Instant end = Instant.parse(endDate + "T00:00:00Z");
 
-            //List<Order> orders = Order.list("locationId", location.name());
-            List<Order> orders = Order.findBetween(start, end);
+            //List<Order> locationOrders = Order.list("locationId", location.name());
+            List<Order> orders = Order.findBetweenForLocation(location.name(),start, end);
             for( Order order : orders){
                 locationLineItems.addAll(order.getLineItems());
             }
