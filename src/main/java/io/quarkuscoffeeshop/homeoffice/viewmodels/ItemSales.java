@@ -8,8 +8,6 @@ public class ItemSales {
 
     public Item item;
 
-    public Date date;
-
     public long sales;
 
     public BigDecimal revenue;

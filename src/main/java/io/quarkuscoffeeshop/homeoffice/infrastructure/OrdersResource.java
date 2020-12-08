@@ -82,12 +82,45 @@ public class OrdersResource {
             itemSales.item = item;
             itemSales.sales = soldItems;
             itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.sales));
-
             sales.add(itemSales);
         }
         return sales;
     }
 
+    /*
+    query itemSalesByDate {
+      itemSalesByDate (startDate:"2020-12-01", endDate:"2020-12-08") {
+        item,
+        revenue,
+        sales
+      }
+    }
+     */
+    @Query
+    public List<ItemSales> getItemSalesByDate(String startDate, String endDate){
+
+        Instant start = Instant.parse(startDate + "T00:00:00Z");
+        Instant end = Instant.parse(endDate + "T00:00:00Z");
+        List<Order> orders = Order.findBetween(start, end);
+
+        List<LineItem> lineItems = new ArrayList<>();
+        for( Order order : orders){
+            lineItems.addAll(order.getLineItems());
+        }
+
+        List<ItemSales> sales = new ArrayList<>();
+
+        for (Item item : Item.values()) {
+            List<LineItem> soldItems = lineItems.stream().filter(i -> i.getItem().name().equals(item.name())).collect(Collectors.toList());
+
+            ItemSales itemSales = new ItemSales();
+            itemSales.item = item;
+            itemSales.sales = soldItems.size();
+            itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.sales));
+            sales.add(itemSales);
+        }
+        return sales;
+    }
 
     //example gql query
     /*
