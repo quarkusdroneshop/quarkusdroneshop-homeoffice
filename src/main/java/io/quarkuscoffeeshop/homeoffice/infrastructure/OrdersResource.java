@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -266,5 +267,26 @@ public class OrdersResource {
 
         logger.debug("stores: " + storeServerSalesList.size());
         return storeServerSalesList;
+    }
+
+    @Query
+    public int getAverageOrderUpTime(String startDate, String endDate){
+        Instant start = Instant.parse(startDate + "T00:00:00Z");
+        Instant end = Instant.parse(endDate + "T00:00:00Z");
+        List<Order> orders = Order.findBetween(start, end);
+
+        long totalTime = 0;
+        for( Order order : orders){
+            Duration orderDuration = Duration.between(order.getOrderPlacedTimestamp(), order.getOrderCompletedTimestamp());
+            totalTime += orderDuration.getSeconds();
+        }
+
+        if (orders.size() == 0 || totalTime == 0){
+            return 0;
+        }else{
+            logger.debug("totalTime: " + totalTime + " orders.size():" + orders.size());
+            int averageTime = (int)(totalTime / orders.size());
+            return averageTime;
+        }
     }
 }
