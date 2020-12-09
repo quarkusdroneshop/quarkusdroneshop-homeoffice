@@ -173,7 +173,7 @@ public class Order extends PanacheEntityBase {
     }
 
     public static List<Order> findBetween(Instant startDate, Instant endDate) {
-        logger.debug("Searching date between: {} and {}", startDate, endDate);
+        //logger.debug("Searching date between: {} and {}", startDate, endDate);
         return find("orderPlacedTimestamp BETWEEN :startDate AND :endDate",
                 Parameters.with("startDate", startDate)
                 .and("endDate", endDate)
@@ -181,7 +181,7 @@ public class Order extends PanacheEntityBase {
     }
 
     public static List<Order> findBetweenForLocation(StoreLocation location, Instant startDate, Instant endDate) {
-        logger.debug("Searching date between: {} and {} for {}", startDate, endDate, location);
+        //logger.debug("Searching date between: {} and {} for {}", startDate, endDate, location);
         return find("locationId = :location AND orderPlacedTimestamp BETWEEN :startDate AND :endDate",
                 Parameters.with("location", location)
                         .and("startDate", startDate)

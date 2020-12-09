@@ -14,14 +14,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.math.BigDecimal;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDate;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @GraphQLApi
 public class OrdersResource {
@@ -80,27 +80,104 @@ public class OrdersResource {
             long soldItems = LineItem.count("item", item);
             ItemSales itemSales = new ItemSales();
             itemSales.item = item;
-            itemSales.sales = soldItems;
-            itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.sales));
+            itemSales.salesTotal = soldItems;
+            itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal));
             sales.add(itemSales);
         }
         return sales;
     }
 
     /*
-    query itemSalesByDate {
-      itemSalesByDate (startDate:"2020-12-01", endDate:"2020-12-08") {
+    query productSalesByDate {
+      productSalesByDate (startDate:"2020-12-03", endDate:"2020-12-09") {
         item,
-        revenue,
-        sales
+        sales{
+          item
+          date,
+          sales
+        }
       }
     }
+    */
+    @Query
+    public List<ProductSales> getProductSalesByDate(String startDate, String endDate){
+        Instant start = Instant.parse(startDate + "T00:00:00Z");
+        Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
+
+        List<Order> orders = Order.findBetween(start, end);
+        //logger.debug("Searching orders between: {} and {} in getItemSalesByDate - orders.size():{}", start, end, orders.size());
+
+
+        List<Instant> dateRange = getDatesBetween(start,end);
+
+        List<ProductSales> productSalesList = new ArrayList<>();
+
+        for (Item item : Item.values()) {
+            ProductSales productSales = new ProductSales();
+            productSales.item = item;
+
+            List<Order> ordersWithProduct = orders.stream().filter(
+                    order -> order.getLineItems().stream().filter(
+                            lineItem -> lineItem.getItem().equals(item)).count() > 0)
+                    .collect(Collectors.toList());
+
+            dateRange.forEach(instant -> {
+
+                //get the orders for that day from the existing collection
+                List<Order> ordersForDay = ordersWithProduct.stream().filter(order -> {
+                    Instant analysisDate = instant.truncatedTo(ChronoUnit.DAYS);
+                    Instant orderDate = order.getOrderPlacedTimestamp().truncatedTo(ChronoUnit.DAYS);
+                    return analysisDate.equals(orderDate);
+                }).collect(Collectors.toList());
+
+                logger.debug("getItemSalesByDate - day: {} orders: {}", instant, ordersForDay.size());
+
+                //get the line items for each order
+                List<LineItem> lineItemsForDay = new ArrayList<>();
+                for( Order order : ordersForDay){
+                    List<LineItem> items = order.getLineItems().stream().filter(lineItem -> lineItem.getItem().equals(item)).collect(Collectors.toList());
+                    lineItemsForDay.addAll(items);
+                }
+
+                long soldItems = lineItemsForDay.stream().filter(lineItem -> lineItem.getItem().equals(item)).count();
+                ItemSales itemSales = new ItemSales();
+                itemSales.item = item;
+                itemSales.salesTotal = soldItems;
+                itemSales.date = instant;
+                itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal));
+                productSales.sales.add(itemSales);
+
+            });
+            productSalesList.add(productSales);
+        }
+
+
+        return productSalesList;
+    }
+
+    public static List<Instant> getDatesBetween(Instant startDate, Instant endDate) {
+
+        long numOfDaysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        return IntStream.iterate(0, i -> i + 1)
+                .limit(numOfDaysBetween)
+                .mapToObj(i -> startDate.plus(i, ChronoUnit.DAYS))
+                .collect(Collectors.toList());
+    }
+
+    /*
+          query itemSalesTotalsByDate($startDate: String!, $endDate: String!){
+            itemSalesTotalsByDate (startDate: $startDate, endDate: $endDate) {
+                item,
+                revenue,
+                sales
+            }
+          }
      */
     @Query
-    public List<ItemSales> getItemSalesByDate(String startDate, String endDate){
+    public List<ItemSales> getItemSalesTotalsByDate(String startDate, String endDate){
 
         Instant start = Instant.parse(startDate + "T00:00:00Z");
-        Instant end = Instant.parse(endDate + "T00:00:00Z");
+        Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
         List<Order> orders = Order.findBetween(start, end);
 
         List<LineItem> lineItems = new ArrayList<>();
@@ -115,8 +192,8 @@ public class OrdersResource {
 
             ItemSales itemSales = new ItemSales();
             itemSales.item = item;
-            itemSales.sales = soldItems.size();
-            itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.sales));
+            itemSales.salesTotal = soldItems.size();
+            itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal));
             sales.add(itemSales);
         }
         return sales;
@@ -165,7 +242,7 @@ public class OrdersResource {
                    if (items.containsKey(lineItem.getItem())){
                        //update
                        ItemSales itemSales = (ItemSales) items.get(lineItem.getItem());
-                       itemSales.sales  = itemSales.sales + 1;
+                       itemSales.salesTotal  = itemSales.salesTotal + 1;
                        itemSales.revenue = itemSales.revenue.add(lineItem.getPrice());
                        items.put(lineItem.getItem(), itemSales);
 
@@ -229,17 +306,16 @@ public class OrdersResource {
         List<StoreServerSales> storeServerSalesList = new ArrayList<>();
 
         Instant start = Instant.parse(startDate + "T00:00:00Z");
-        Instant end = Instant.parse(endDate + "T00:00:00Z");
+        Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
         List<Order> allOrders = Order.findBetween(start, end);
 
-        logger.debug("allOrders: " + allOrders.size());
+        //logger.debug("allOrders: " + allOrders.size());
 
         for (StoreLocation location : StoreLocation.values()) {
 
             Hashtable servers = new Hashtable();
 
             //get an array of all lineItems for the location
-            //this is so much easier using LINQ with entity framework in C#
             List<LineItem> locationLineItems = new ArrayList<>();
 
             //List<Order> locationOrders = Order.list("locationId", location.name());
@@ -259,7 +335,7 @@ public class OrdersResource {
                     if (items.containsKey(lineItem.getItem())){
                         //update
                         ItemSales itemSales = (ItemSales) items.get(lineItem.getItem());
-                        itemSales.sales  = itemSales.sales + 1;
+                        itemSales.salesTotal  = itemSales.salesTotal + 1;
                         itemSales.revenue = itemSales.revenue.add(lineItem.getPrice());
                         items.put(lineItem.getItem(), itemSales);
 
@@ -305,7 +381,7 @@ public class OrdersResource {
     @Query
     public int getAverageOrderUpTime(String startDate, String endDate){
         Instant start = Instant.parse(startDate + "T00:00:00Z");
-        Instant end = Instant.parse(endDate + "T00:00:00Z");
+        Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
         List<Order> orders = Order.findBetween(start, end);
 
         long totalTime = 0;

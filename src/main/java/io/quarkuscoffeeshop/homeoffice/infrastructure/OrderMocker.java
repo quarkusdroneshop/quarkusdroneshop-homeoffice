@@ -158,14 +158,14 @@ public class OrderMocker {
         long rand = 1L;
         while (!valid) {
             rand = 1L + (long) (Math.random() * (10L - 1L));
-            logger.debug("random time of {}", rand);
+            //logger.debug("random time of {}", rand);
             if (rand <= 4) {
                 valid = true;
             } else if (rand % 3 == 0) {
                 valid = true;
             }
         }
-        logger.debug("returning random time of {}", rand);
+        //logger.debug("returning random time of {}", rand);
         return rand;
     }
 

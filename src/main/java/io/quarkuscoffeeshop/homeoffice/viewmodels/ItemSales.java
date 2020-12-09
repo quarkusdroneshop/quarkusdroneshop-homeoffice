@@ -2,13 +2,16 @@ package io.quarkuscoffeeshop.homeoffice.viewmodels;
 import io.quarkuscoffeeshop.homeoffice.domain.Item;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Date;
 
 public class ItemSales {
 
     public Item item;
 
-    public long sales;
+    public long salesTotal;
+
+    public Instant date;
 
     public BigDecimal revenue;
 
@@ -16,9 +19,16 @@ public class ItemSales {
 
     }
 
-    public ItemSales(Item item, long sales, BigDecimal revenue){
+    public ItemSales(Item item, long salesTotal, BigDecimal revenue){
         this.item = item;
-        this.sales = sales;
+        this.salesTotal = salesTotal;
+        this.revenue = revenue;
+    }
+
+    public ItemSales(Item item, long salesTotal, BigDecimal revenue, Instant date){
+        this.item = item;
+        this.salesTotal = salesTotal;
+        this.date = date;
         this.revenue = revenue;
     }
 }
