@@ -16,10 +16,7 @@ import javax.inject.Inject;
 import java.math.BigDecimal;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -196,6 +193,7 @@ public class OrdersResource {
             itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal));
             sales.add(itemSales);
         }
+        sales.sort((itemSales, t1) -> itemSales.item.name().compareTo(t1.item.name()));
         return sales;
     }
 
