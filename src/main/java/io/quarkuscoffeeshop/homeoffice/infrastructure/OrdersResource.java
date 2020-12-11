@@ -1,13 +1,9 @@
 package io.quarkuscoffeeshop.homeoffice.infrastructure;
 
-import graphql.schema.idl.SchemaParser;
 import io.quarkuscoffeeshop.homeoffice.domain.*;
 import io.quarkuscoffeeshop.homeoffice.viewmodels.*;
-import io.smallrye.graphql.api.Scalar;
-import org.antlr.v4.runtime.misc.Pair;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
-import org.eclipse.microprofile.graphql.Name;
 import org.eclipse.microprofile.graphql.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,11 +24,28 @@ public class OrdersResource {
     @Inject
     OrderService orderService;
 
-    @Query("allOrders")
-    @Description("Get all orders from all stores")
-    public List<Order> allOrders() {
+    @Inject
+    MockerService orderMocker;
 
-        return Order.listAll();
+
+
+    @Query("mockerPaused")
+    @Description("Get mocker status")
+    public boolean mockerRunning() {
+
+        return orderMocker.pause;
+    }
+
+    @Query("mockerTogglePause")
+    @Description("Set mocker on/off")
+    public boolean mockerToggleRunning(Boolean toggle) {
+        if (toggle){
+            logger.debug("mocker resumed");
+        }else{
+            logger.debug("mocker paused");
+        }
+        orderMocker.pause = toggle;
+        return orderMocker.pause;
     }
 
     /*
@@ -127,7 +140,7 @@ public class OrdersResource {
                     return analysisDate.equals(orderDate);
                 }).collect(Collectors.toList());
 
-                logger.debug("getItemSalesByDate - day: {} orders: {}", instant, ordersForDay.size());
+                //logger.debug("getItemSalesByDate - day: {} orders: {}", instant, ordersForDay.size());
 
                 //get the line items for each order
                 List<LineItem> lineItemsForDay = new ArrayList<>();
@@ -372,7 +385,7 @@ public class OrdersResource {
 
         }
 
-        logger.debug("stores: " + storeServerSalesList.size());
+        //logger.debug("stores: " + storeServerSalesList.size());
         return storeServerSalesList;
     }
 
@@ -391,7 +404,7 @@ public class OrdersResource {
         if (orders.size() == 0 || totalTime == 0){
             return 0;
         }else{
-            logger.debug("totalTime: " + totalTime + " orders.size():" + orders.size());
+            //logger.debug("totalTime: " + totalTime + " orders.size():" + orders.size());
             int averageTime = (int)(totalTime / orders.size());
             return averageTime;
         }

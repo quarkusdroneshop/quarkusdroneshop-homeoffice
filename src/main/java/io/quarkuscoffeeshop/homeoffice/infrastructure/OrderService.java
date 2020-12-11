@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class OrderService {
 
-    public List<Order> allOrders() {
+/*    public List<Order> allOrders() {
         return Order.listAll();
     }
 
@@ -28,5 +28,5 @@ public class OrderService {
         Map<Item, List<LineItem>> lineItemMap =
                 lineItemList.stream().collect(Collectors.groupingBy(LineItem::getItem));
         return null;
-    }
+    }*/
 }
