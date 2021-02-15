@@ -1,15 +1,17 @@
 package io.quarkuscoffeeshop.homeoffice.viewmodels;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.quarkuscoffeeshop.homeoffice.domain.Item;
+import io.quarkuscoffeeshop.homeoffice.domain.Order;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Date;
 
 @Entity
-@Table(name="ItemSales")
-public class ItemSales extends PanacheEntity {
+@Table(name="ProductItemSales")
+@RegisterForReflection
+public class ProductItemSales extends PanacheEntity {
 
     @Enumerated(EnumType.STRING)
     public Item item;
@@ -20,17 +22,17 @@ public class ItemSales extends PanacheEntity {
 
     public BigDecimal revenue;
 
-    public ItemSales(){
+    public ProductItemSales(){
 
     }
 
-    public ItemSales(Item item, long salesTotal, BigDecimal revenue){
+    public ProductItemSales(Item item, long salesTotal, BigDecimal revenue){
         this.item = item;
         this.salesTotal = salesTotal;
         this.revenue = revenue;
     }
 
-    public ItemSales(Item item, long salesTotal, BigDecimal revenue, Instant date){
+    public ProductItemSales(Item item, long salesTotal, BigDecimal revenue, Instant date){
         this.item = item;
         this.salesTotal = salesTotal;
         this.date = date;

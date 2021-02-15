@@ -40,6 +40,8 @@ public class Order extends PanacheEntityBase {
 
     Instant orderCompletedTimestamp;
 
+    Instant createdTimestamp;
+
     public Order() {
     }
 
@@ -57,6 +59,7 @@ public class Order extends PanacheEntityBase {
                 .stream()
                 .map(item -> item.getPrice())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.setCreatedTimestamp();
     }
 
     @Override
@@ -136,6 +139,9 @@ public class Order extends PanacheEntityBase {
         return orderSource;
     }
 
+    public void setCreatedTimestamp() {
+        this.createdTimestamp = Instant.now();
+    }
     public void setOrderSource(OrderSource orderSource) {
         this.orderSource = orderSource;
     }
@@ -177,6 +183,15 @@ public class Order extends PanacheEntityBase {
         return find("orderPlacedTimestamp BETWEEN :startDate AND :endDate",
                 Parameters.with("startDate", startDate)
                 .and("endDate", endDate)
+        ).list();
+    }
+
+    public static List<Order> findBetweenAfter(Instant startDate, Instant endDate, Instant createdTimestamp) {
+        //logger.debug("Searching date between: {} and {}", startDate, endDate);
+        return find("orderPlacedTimestamp BETWEEN :startDate AND :endDate AND createdTimestamp >= :createdTimestamp",
+                Parameters.with("startDate", startDate)
+                        .and("endDate", endDate)
+                        .and("createdTimestamp", createdTimestamp)
         ).list();
     }
 

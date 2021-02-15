@@ -1,5 +1,6 @@
 package io.quarkuscoffeeshop.homeoffice.infrastructure;
 
+import io.quarkus.panache.common.Parameters;
 import io.quarkuscoffeeshop.homeoffice.domain.*;
 import io.quarkuscoffeeshop.homeoffice.viewmodels.*;
 import org.eclipse.microprofile.graphql.Description;
@@ -9,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
@@ -109,12 +112,21 @@ public class OrdersResource {
       }
     }
     */
+    @Transactional
     @Query
     public List<ProductSales> getProductSalesByDate(String startDate, String endDate){
+        Instant functionStart = Instant.now();
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
 
-        List<Order> orders = Order.findBetween(start, end);
+        ProductSales lastProductSales = ProductSales.find("order by id desc").firstResult();
+        List<Order> orders = new ArrayList<Order>();
+        if (lastProductSales != null){
+            orders = Order.findBetweenAfter(start, end, lastProductSales.createdTimestamp);
+        }else{
+            orders = Order.findBetween(start, end);
+        }
+        //List<Order> orders = Order.findBetween(start, end);
         //logger.debug("Searching orders between: {} and {} in getItemSalesByDate - orders.size():{}", start, end, orders.size());
 
 
@@ -123,8 +135,7 @@ public class OrdersResource {
         List<ProductSales> productSalesList = new ArrayList<>();
 
         for (Item item : Item.values()) {
-            ProductSales productSales = new ProductSales();
-            productSales.item = item;
+            ProductSales productSales = ProductSales.findByItem(item);
 
             List<Order> ordersWithProduct = orders.stream().filter(
                     order -> order.getLineItems().stream().filter(
@@ -150,18 +161,33 @@ public class OrdersResource {
                 }
 
                 long soldItems = lineItemsForDay.stream().filter(lineItem -> lineItem.getItem().equals(item)).count();
-                ItemSales itemSales = new ItemSales();
-                itemSales.item = item;
-                itemSales.salesTotal = soldItems;
-                itemSales.date = instant;
-                itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal));
-                productSales.sales.add(itemSales);
 
+                ProductItemSales itemSales = ProductItemSales.find("item = :item AND date = :date",
+                        Parameters.with("item", item).and("date", instant)
+                ).firstResult();
+
+                if (itemSales != null){
+                    //update existing object
+
+                    itemSales.salesTotal = itemSales.salesTotal + soldItems;
+                    itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal));
+                } else {
+                    itemSales = new ProductItemSales();
+                    itemSales.item = item;
+                    itemSales.salesTotal = soldItems;
+                    itemSales.date = instant;
+                    itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal));
+                    productSales.productItemSales.add(itemSales);
+                }
             });
+            productSales.createdTimestamp = functionStart;
+            productSales.persist();
             productSalesList.add(productSales);
         }
 
-
+        Instant functionEnd = Instant.now();
+        System.out.println("getProductSalesByDate: " + Duration.between(functionStart, functionEnd));
+        productSalesList.sort(Comparator.comparing(ProductSales::getItem));
         return productSalesList;
     }
 
@@ -185,7 +211,7 @@ public class OrdersResource {
      */
     @Query
     public List<ItemSales> getItemSalesTotalsByDate(String startDate, String endDate){
-
+        Instant functionStart = Instant.now();
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
         List<Order> orders = Order.findBetween(start, end);
@@ -207,6 +233,8 @@ public class OrdersResource {
             sales.add(itemSales);
         }
         sales.sort((itemSales, t1) -> itemSales.item.name().compareTo(t1.item.name()));
+        Instant functionEnd = Instant.now();
+        System.out.println("getItemSalesTotalsByDate: " + Duration.between(functionStart, functionEnd));
         return sales;
     }
 
@@ -313,6 +341,8 @@ public class OrdersResource {
      */
     @Query
     public List<StoreServerSales> getStoreServerSalesByDate(String startDate, String endDate){
+        Instant functionStart = Instant.now();
+
         //I have to come document this - a lot of Hashtable work to get a count of unique items sold by servers by location
         List<StoreServerSales> storeServerSalesList = new ArrayList<>();
 
@@ -386,14 +416,24 @@ public class OrdersResource {
         }
 
         //logger.debug("stores: " + storeServerSalesList.size());
+        Instant functionEnd = Instant.now();
+        System.out.println("getStoreServerSalesByDate: " + Duration.between(functionStart, functionEnd));
         return storeServerSalesList;
     }
 
+    @Transactional
     @Query
     public int getAverageOrderUpTime(String startDate, String endDate){
+        Instant now = Instant.now();
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
-        List<Order> orders = Order.findBetween(start, end);
+        AverageOrderUpTime averageOrderUpTime = AverageOrderUpTime.find("order by id desc").firstResult();
+        List<Order> orders = new ArrayList<Order>();
+        if (averageOrderUpTime != null){
+            orders = Order.findBetweenAfter(start, end, averageOrderUpTime.calculatedAt);
+        }else{
+            orders = Order.findBetween(start, end);
+        }
 
         long totalTime = 0;
         for( Order order : orders){
@@ -405,8 +445,23 @@ public class OrdersResource {
             return 0;
         }else{
             //logger.debug("totalTime: " + totalTime + " orders.size():" + orders.size());
-            int averageTime = (int)(totalTime / orders.size());
-            return averageTime;
+            if (averageOrderUpTime == null){
+                int averageTime = (int)(totalTime / orders.size());
+                averageOrderUpTime = new AverageOrderUpTime();
+                averageOrderUpTime.averageTime = averageTime;
+                averageOrderUpTime.orderCount = (int) orders.stream().count();
+                averageOrderUpTime.calculatedAt = now;
+                averageOrderUpTime.persist();
+            }else{
+                int oldTotalTime = averageOrderUpTime.averageTime * averageOrderUpTime.orderCount;
+                averageOrderUpTime.averageTime = (int)((totalTime + oldTotalTime) / (averageOrderUpTime.orderCount + orders.size()));
+                averageOrderUpTime.orderCount = averageOrderUpTime.orderCount + (int) orders.stream().count();
+                averageOrderUpTime.calculatedAt = now;
+                averageOrderUpTime.persist();
+            }
+            Instant functionEnd = Instant.now();
+            System.out.println("getAverageOrderUpTime: " + Duration.between(now, functionEnd));
+            return averageOrderUpTime.averageTime;
         }
     }
 }

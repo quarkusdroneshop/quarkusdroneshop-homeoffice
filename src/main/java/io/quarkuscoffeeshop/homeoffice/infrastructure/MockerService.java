@@ -19,7 +19,7 @@ public class MockerService  implements QuarkusApplication {
     OrderMocker orderMocker;
 
     private boolean running = true;
-    public boolean pause = true;
+    public boolean pause = false;
 
     @Override
     public int run(String... args) throws Exception {
@@ -32,7 +32,7 @@ public class MockerService  implements QuarkusApplication {
 
         while (running == true) {
             try {
-                while (pause){
+                while (!pause){
                     Thread.sleep(1000);
                 }
                 Thread.sleep((new Random().nextInt(3)+1) * 1000);
