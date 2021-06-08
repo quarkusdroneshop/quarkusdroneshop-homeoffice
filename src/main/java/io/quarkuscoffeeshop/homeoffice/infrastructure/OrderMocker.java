@@ -132,7 +132,7 @@ public class OrderMocker {
     public OrderMocker() {
     }
 
-    protected Order mockOrder() {
+    public Order mockOrder() {
 
         //set the order date to random in the last week - backfill data is necessary for analytics
         //is this a problem for other use cases?
