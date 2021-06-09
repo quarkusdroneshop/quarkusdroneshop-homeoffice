@@ -73,7 +73,7 @@ public class KafkaServiceTest {
     }
 
     @Test
-    public void testReceivingMessages() {
+    public void testOnOrderCreated() {
 
         OrderMocker orderMocker = new OrderMocker();
         Order order = orderMocker.mockOrder();
