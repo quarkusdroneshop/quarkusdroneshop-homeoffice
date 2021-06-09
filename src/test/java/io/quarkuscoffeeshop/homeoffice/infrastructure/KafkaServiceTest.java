@@ -15,7 +15,7 @@ import javax.enterprise.inject.Any;
 import javax.inject.Inject;
 import java.util.concurrent.TimeUnit;
 
-import static io.quarkuscoffeeshop.homeoffice.infrastructure.KafkaTopics.ORDERS_CREATED;
+import static io.quarkuscoffeeshop.homeoffice.infrastructure.KafkaTopics.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,11 +31,45 @@ public class KafkaServiceTest {
     @Any
     InMemoryConnector connector;
 
-    InMemorySource<Order> ordersCreated;
+    InMemorySource<Order> orderCreated;
+
+    InMemorySource<Order> orderUpdated;
+
+    InMemorySource<Order> loyaltyMemberPurchase;
 
     @BeforeEach
     public void setUp() {
-        ordersCreated = connector.source(ORDERS_CREATED);
+        orderCreated = connector.source(ORDERS_CREATED);
+        orderUpdated = connector.source(ORDERS_UPDATED);
+        loyaltyMemberPurchase = connector.source(LOYALTY_MEMBER_PURCHASE);
+    }
+
+    @Test
+    public void testLoyaltyMemberPurchase() {
+
+        OrderMocker orderMocker = new OrderMocker();
+        Order order = orderMocker.mockOrder();
+        loyaltyMemberPurchase.send(order);
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            assertNull(e);
+        }
+        Mockito.verify(kafkaService, Mockito.times(1)).onLoyaltyMemberPurchase(any(Order.class));
+    }
+
+    @Test
+    public void testOrderUpdated() {
+
+        OrderMocker orderMocker = new OrderMocker();
+        Order order = orderMocker.mockOrder();
+        orderUpdated.send(order);
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            assertNull(e);
+        }
+        Mockito.verify(kafkaService, Mockito.times(1)).onOrderUpated(any(Order.class));
     }
 
     @Test
@@ -43,7 +77,7 @@ public class KafkaServiceTest {
 
         OrderMocker orderMocker = new OrderMocker();
         Order order = orderMocker.mockOrder();
-        ordersCreated.send(order);
+        orderCreated.send(order);
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {

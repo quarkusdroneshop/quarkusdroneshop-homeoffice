@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;
 
-import static io.quarkuscoffeeshop.homeoffice.infrastructure.KafkaTopics.ORDERS_CREATED;
+import static io.quarkuscoffeeshop.homeoffice.infrastructure.KafkaTopics.*;
 
 @ApplicationScoped
 public class KafkaService {
@@ -20,6 +20,22 @@ public class KafkaService {
     @Blocking
     @Transactional
     public void onOrderCreated(final Order order) {
+
+        LOGGER.debug("Order received: {}", order);
+    }
+
+    @Incoming(ORDERS_UPDATED)
+    @Blocking
+    @Transactional
+    public void onOrderUpated(final Order order) {
+
+        LOGGER.debug("Order received: {}", order);
+    }
+
+    @Incoming(LOYALTY_MEMBER_PURCHASE)
+    @Blocking
+    @Transactional
+    public void onLoyaltyMemberPurchase(final Order order) {
 
         LOGGER.debug("Order received: {}", order);
     }
