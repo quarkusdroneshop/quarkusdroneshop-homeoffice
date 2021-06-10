@@ -4,6 +4,7 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.mockito.InjectSpy;
 import io.quarkuscoffeeshop.homeoffice.domain.Order;
+import io.quarkuscoffeeshop.homeoffice.infrastructure.domain.IngressOrder;
 import io.quarkuscoffeeshop.homeoffice.infrastructure.utils.KafkaH2TestResource;
 import io.smallrye.reactive.messaging.connectors.InMemoryConnector;
 import io.smallrye.reactive.messaging.connectors.InMemorySource;
@@ -55,7 +56,7 @@ public class KafkaServiceTest {
         } catch (InterruptedException e) {
             assertNull(e);
         }
-        Mockito.verify(kafkaService, Mockito.times(1)).onLoyaltyMemberPurchase(any(Order.class));
+        Mockito.verify(kafkaService, Mockito.times(1)).onLoyaltyMemberPurchase(any(IngressOrder.class));
     }
 
     @Test
@@ -69,7 +70,7 @@ public class KafkaServiceTest {
         } catch (InterruptedException e) {
             assertNull(e);
         }
-        Mockito.verify(kafkaService, Mockito.times(1)).onOrderUpated(any(Order.class));
+        Mockito.verify(kafkaService, Mockito.times(1)).onOrderUpated(any(IngressOrder.class));
     }
 
     @Test
@@ -83,7 +84,7 @@ public class KafkaServiceTest {
         } catch (InterruptedException e) {
             assertNull(e);
         }
-        Mockito.verify(kafkaService, Mockito.times(1)).onOrderCreated(any(Order.class));
+        Mockito.verify(kafkaService, Mockito.times(1)).onOrderCreated(any(IngressOrder.class));
 
     }
 }
