@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.quarkuscoffeeshop</groupId>
   <artifactId>homeoffice-backend</artifactId>
-  <version>2.0.3</version>
+  <version>2.0.4</version>
   <properties>
     <awaitility.version>3.0.0</awaitility.version>
     <compiler-plugin.version>3.8.1</compiler-plugin.version>
