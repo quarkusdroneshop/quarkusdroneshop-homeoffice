@@ -13,7 +13,7 @@ public class OrdersResourceTest {
     public void testAllOrdersEndpoint() {
         given()
           .when()
-            .get("/graphql-ui/")
+            .get("/graphql/schema.graphql")
           .then()
              .statusCode(200);
     }
