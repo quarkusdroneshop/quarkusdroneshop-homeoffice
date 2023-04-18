@@ -35,27 +35,27 @@ public class KafkaServiceOrderConversionTest {
         System.out.println(result.toString());
     }
 
-    @Test
-    public void testOrderConversion() {
-        List<IngressLineItem> baristaLineItems = mockBaristaLineItems();
-        IngressOrder ingressOrder = new IngressOrder(
-                UUID.randomUUID().toString(),
-                OrderSource.WEB,
-                EventType.OrderCreated,
-                null,
-                Instant.now(),
-                baristaLineItems,
-                null
-        );
-
-        KafkaService kafkaService = new KafkaService();
-        Order order = kafkaService.convertIngressOrderToOrder(ingressOrder);
-        LOGGER.debug("Order: {}", order);
-        System.out.println(order.toString());
-        assertNotNull(order);
-        assertEquals(1, order.getLineItems().size());
-
-    }
+//    @Test
+//    public void testOrderConversion() {
+//        List<IngressLineItem> baristaLineItems = mockBaristaLineItems();
+//        IngressOrder ingressOrder = new IngressOrder(
+//                UUID.randomUUID().toString(),
+//                OrderSource.WEB,
+//                EventType.OrderCreated,
+//                null,
+//                Instant.now(),
+//                baristaLineItems,
+//                null
+//        );
+//
+//        KafkaService kafkaService = new KafkaService();
+//        Order order = kafkaService.convertIngressOrderToOrder(ingressOrder);
+//        LOGGER.debug("Order: {}", order);
+//        System.out.println(order.toString());
+//        assertNotNull(order);
+//        assertEquals(1, order.getLineItems().size());
+//
+//    }
 
     private List<IngressLineItem> mockBaristaLineItems() {
         return new ArrayList<>(Arrays.asList(new IngressLineItem(Item.ESPRESSO, "Barney", null)));

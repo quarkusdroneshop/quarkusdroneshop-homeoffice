@@ -2,8 +2,7 @@ package io.quarkuscoffeeshop.homeoffice.infrastructure;
 
 import io.quarkuscoffeeshop.homeoffice.domain.LineItem;
 import io.quarkuscoffeeshop.homeoffice.domain.Order;
-import io.quarkuscoffeeshop.homeoffice.domain.OrderSource;
-import io.quarkuscoffeeshop.homeoffice.infrastructure.domain.IngressOrder;
+import io.quarkuscoffeeshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.slf4j.Logger;
@@ -27,55 +26,54 @@ public class KafkaService {
     @Incoming(ORDERS_CREATED)
     @Blocking
     @Transactional
-    public void onOrderCreated(final IngressOrder ingressOrder) {
+    public void onOrderCreated(final OrderRecord orderRecord) {
 
-        LOGGER.debug("IngressOrder received: {}", ingressOrder);
-        Order order = convertIngressOrderToOrder(ingressOrder);
+        LOGGER.debug("IngressOrder received: {}", orderRecord);
+        Order order = convertOrdeRecordToOrder(orderRecord);
         LOGGER.debug("Order : {}", order);
     }
 
-    protected Order convertIngressOrderToOrder(final IngressOrder ingressOrder) {
+    protected Order convertOrdeRecordToOrder(final OrderRecord orderRecord) {
 
         List<LineItem> lineItems = new ArrayList<>();
-        if (ingressOrder.getBaristaLineItems().isPresent()) {
-            ingressOrder.getBaristaLineItems().get().forEach(l -> {
-                lineItems.add(new LineItem(l.getItem(), BigDecimal.valueOf(3.00), l.getName()));
+        if (!(orderRecord.baristaLineItems()==null)) {
+            orderRecord.baristaLineItems().forEach(l -> {
+                lineItems.add(new LineItem(l.item(), BigDecimal.valueOf(3.00), l.name()));
             });
         }
-        if (ingressOrder.getKitchenLineItems().isPresent()) {
-            ingressOrder.getKitchenLineItems().get().forEach(k -> {
-                lineItems.add(new LineItem(k.getItem(), BigDecimal.valueOf(3.50), k.getName()));
+        if (!(orderRecord.kitchenLineItems()==null)) {
+            orderRecord.kitchenLineItems().forEach(k -> {
+                lineItems.add(new LineItem(k.item(), BigDecimal.valueOf(3.50), k.name()));
             });
         }
         return new Order(
-                ingressOrder.getOrderId(),
+                orderRecord.orderId(),
                 lineItems,
-                ingressOrder.getOrderSource(),
+                orderRecord.orderSource(),
                 "ATLANTA",
-                ingressOrder.getLoyaltyMemberId().isPresent() ? ingressOrder.getLoyaltyMemberId().get() : null,
-                ingressOrder.getTimestamp(),
+                orderRecord.loyaltyMemberId() == null ? null : orderRecord.loyaltyMemberId(),
+                orderRecord.timestamp(),
                 Instant.now()
         );
-
     }
 
     @Incoming(ORDERS_UPDATED)
     @Blocking
     @Transactional
-    public void onOrderUpated(final IngressOrder ingressOrder) {
+    public void onOrderUpated(final OrderRecord orderRecord) {
 
-        LOGGER.debug("IngressOrder received: {}", ingressOrder);
-        Order order = convertIngressOrderToOrder(ingressOrder);
+        LOGGER.debug("OrderRecord received: {}", orderRecord);
+        Order order = convertOrdeRecordToOrder(orderRecord);
         LOGGER.debug("Order : {}", order);
     }
 
     @Incoming(LOYALTY_MEMBER_PURCHASE)
     @Blocking
     @Transactional
-    public void onLoyaltyMemberPurchase(final IngressOrder ingressOrder) {
+    public void onLoyaltyMemberPurchase(final OrderRecord orderRecord) {
 
-        LOGGER.debug("IngressOrder received: {}", ingressOrder);
-        Order order = convertIngressOrderToOrder(ingressOrder);
+        LOGGER.debug("IngressOrder received: {}", orderRecord);
+        Order order = convertOrdeRecordToOrder(orderRecord);
         LOGGER.debug("Order : {}", order);
     }
 }
