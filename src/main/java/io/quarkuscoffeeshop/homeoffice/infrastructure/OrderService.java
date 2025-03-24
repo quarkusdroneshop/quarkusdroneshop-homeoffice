@@ -20,7 +20,7 @@ public class OrderService {
     }
 
     public List<Order> allOrdersByLocation(final StoreLocation storeLocation) {
-        return Order.find("locationId = :locationId", new HashMap<String, Object>(){{ put("locationId", storeLocation); }}).list();
+        return Order.find("location = :location", new HashMap<String, Object>(){{ put("location", storeLocation); }}).list();
     }
 
     public List<LineItem> getLineItemSales() {

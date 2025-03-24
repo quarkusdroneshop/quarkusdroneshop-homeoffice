@@ -31,8 +31,8 @@ public class Order extends PanacheEntityBase {
     OrderSource orderSource;
 
     //@Enumerated(EnumType.STRING)
-    //StoreLocation locationId;
-    String locationId;
+    //StoreLocation location;
+    String location;
 
     String customerLoyaltyId;
 
@@ -45,13 +45,13 @@ public class Order extends PanacheEntityBase {
     public Order() {
     }
 
-    public Order(String id, List<LineItem> lineItems, OrderSource orderSource, String locationId, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
+    public Order(String id, List<LineItem> lineItems, OrderSource orderSource, String location, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
         this.id = id;
         lineItems.forEach(lineItem -> {
             addLineItem(lineItem);
         });
         this.orderSource = orderSource;
-        this.locationId = locationId;
+        this.location = location;
         this.customerLoyaltyId = customerLoyaltyId;
         this.orderPlacedTimestamp = orderPlacedTimestamp;
         this.orderCompletedTimestamp = orderCompletedTimestamp;
@@ -69,7 +69,7 @@ public class Order extends PanacheEntityBase {
                 .add("lineItems=" + lineItems)
                 .add("total=" + total)
                 .add("orderSource=" + orderSource)
-                .add("locationId='" + locationId + "'")
+                .add("location='" + location + "'")
                 .add("customerLoyaltyId='" + customerLoyaltyId + "'")
                 .add("orderPlacedTimestamp=" + orderPlacedTimestamp)
                 .add("orderCompletedTimestamp=" + orderCompletedTimestamp)
@@ -87,7 +87,7 @@ public class Order extends PanacheEntityBase {
         if (lineItems != null ? !lineItems.equals(order.lineItems) : order.lineItems != null) return false;
         if (total != null ? !total.equals(order.total) : order.total != null) return false;
         if (orderSource != order.orderSource) return false;
-        if (locationId != null ? !locationId.equals(order.locationId) : order.locationId != null) return false;
+        if (location != null ? !location.equals(order.location) : order.location != null) return false;
         if (customerLoyaltyId != null ? !customerLoyaltyId.equals(order.customerLoyaltyId) : order.customerLoyaltyId != null)
             return false;
         if (orderPlacedTimestamp != null ? !orderPlacedTimestamp.equals(order.orderPlacedTimestamp) : order.orderPlacedTimestamp != null)
@@ -101,7 +101,7 @@ public class Order extends PanacheEntityBase {
         result = 31 * result + (lineItems != null ? lineItems.hashCode() : 0);
         result = 31 * result + (total != null ? total.hashCode() : 0);
         result = 31 * result + (orderSource != null ? orderSource.hashCode() : 0);
-        result = 31 * result + (locationId != null ? locationId.hashCode() : 0);
+        result = 31 * result + (location != null ? location.hashCode() : 0);
         result = 31 * result + (customerLoyaltyId != null ? customerLoyaltyId.hashCode() : 0);
         result = 31 * result + (orderPlacedTimestamp != null ? orderPlacedTimestamp.hashCode() : 0);
         result = 31 * result + (orderCompletedTimestamp != null ? orderCompletedTimestamp.hashCode() : 0);
@@ -146,12 +146,12 @@ public class Order extends PanacheEntityBase {
         this.orderSource = orderSource;
     }
 
-    public String getLocationId() {
-        return locationId;
+    public String getLocation() {
+        return location;
     }
 
-    public void setLocationId(String locationId) {
-        this.locationId = locationId;
+    public void setLocation(String location) {
+        this.location = location;
     }
 
     public String getCustomerLoyaltyId() {
@@ -197,7 +197,7 @@ public class Order extends PanacheEntityBase {
 
     public static List<Order> findBetweenForLocation(StoreLocation location, Instant startDate, Instant endDate) {
         //logger.debug("Searching date between: {} and {} for {}", startDate, endDate, location);
-        return find("locationId = :location AND orderPlacedTimestamp BETWEEN :startDate AND :endDate",
+        return find("location = :location AND orderPlacedTimestamp BETWEEN :startDate AND :endDate",
                 Parameters.with("location", location)
                         .and("startDate", startDate)
                         .and("endDate", endDate)

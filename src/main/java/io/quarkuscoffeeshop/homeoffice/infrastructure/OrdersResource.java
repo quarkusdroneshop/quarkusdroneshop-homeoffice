@@ -54,9 +54,9 @@ public class OrdersResource {
     /*
     Example Query
     query orders {
-      ordersForLocation(locationId: "ATLANTA") {
+      ordersForLocation(location: "ATLANTA") {
         id
-        locationId
+        location
         lineItems {
           id
           item
@@ -70,16 +70,16 @@ public class OrdersResource {
     }
      */
     @Query
-    @Description("Get all orders from store by locationId")
-    public List<Order> getOrdersForLocation(String locationId) {
-        return Order.list("locationId", locationId);
+    @Description("Get all orders from store by location")
+    public List<Order> getOrdersForLocation(String location) {
+        return Order.list("location", location);
     }
 
     @Query
     public List<LocationOrders> getOrdersByLocation() {
         List<LocationOrders> aggregate = new ArrayList<>();
         for (StoreLocation location : StoreLocation.values()) {
-            List<Order> locationOrders =  Order.list("locationId", location.name());
+            List<Order> locationOrders =  Order.list("location", location.name());
             aggregate.add(new LocationOrders(location.name(), locationOrders));
         }
         return aggregate;
@@ -265,7 +265,7 @@ public class OrdersResource {
             //get an array of all lineItems for the location
             //this is so much easier using LINQ with entity framework in C#
             List<LineItem> locationLineItems = new ArrayList<>();
-            List<Order> orders = Order.list("locationId", location.name());
+            List<Order> orders = Order.list("location", location.name());
             for( Order order : orders){
                 locationLineItems.addAll(order.getLineItems());
             }
@@ -359,8 +359,8 @@ public class OrdersResource {
             //get an array of all lineItems for the location
             List<LineItem> locationLineItems = new ArrayList<>();
 
-            //List<Order> locationOrders = Order.list("locationId", location.name());
-            List<Order> orders = allOrders.stream().filter(order -> order.getLocationId().equals(location.name())).collect(Collectors.toList());
+            //List<Order> locationOrders = Order.list("location", location.name());
+            List<Order> orders = allOrders.stream().filter(order -> order.getLocation().equals(location.name())).collect(Collectors.toList());
 
             for( Order order : orders){
                 locationLineItems.addAll(order.getLineItems());
