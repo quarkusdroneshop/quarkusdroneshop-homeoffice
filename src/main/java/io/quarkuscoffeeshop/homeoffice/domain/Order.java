@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
+
+import java.beans.Transient;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -16,11 +18,11 @@ import java.util.*;
 @Entity @Table(name="Orders") @RegisterForReflection
 public class Order extends PanacheEntityBase {
 
-    @Transient
+    //@Transient
     static Logger logger = LoggerFactory.getLogger(Order.class);
 
     @Id
-    private String id;
+    private String orderId;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "order", cascade = CascadeType.ALL)
     private List<LineItem> lineItems;
@@ -45,8 +47,8 @@ public class Order extends PanacheEntityBase {
     public Order() {
     }
 
-    public Order(String id, List<LineItem> lineItems, OrderSource orderSource, String location, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
-        this.id = id;
+    public Order(String orderId, List<LineItem> lineItems, OrderSource orderSource, String location, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
+        this.orderId = orderId;
         lineItems.forEach(lineItem -> {
             addLineItem(lineItem);
         });
@@ -65,7 +67,7 @@ public class Order extends PanacheEntityBase {
     @Override
     public String toString() {
         return new StringJoiner(", ", Order.class.getSimpleName() + "[", "]")
-                .add("id='" + id + "'")
+                .add("orderId='" + orderId + "'")
                 .add("lineItems=" + lineItems)
                 .add("total=" + total)
                 .add("orderSource=" + orderSource)
@@ -83,7 +85,7 @@ public class Order extends PanacheEntityBase {
 
         Order order = (Order) o;
 
-        if (id != null ? !id.equals(order.id) : order.id != null) return false;
+        if (orderId != null ? !orderId.equals(order.orderId) : order.orderId != null) return false;
         if (lineItems != null ? !lineItems.equals(order.lineItems) : order.lineItems != null) return false;
         if (total != null ? !total.equals(order.total) : order.total != null) return false;
         if (orderSource != order.orderSource) return false;
@@ -97,7 +99,7 @@ public class Order extends PanacheEntityBase {
 
     @Override
     public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
+        int result = orderId != null ? orderId.hashCode() : 0;
         result = 31 * result + (lineItems != null ? lineItems.hashCode() : 0);
         result = 31 * result + (total != null ? total.hashCode() : 0);
         result = 31 * result + (orderSource != null ? orderSource.hashCode() : 0);
@@ -115,12 +117,12 @@ public class Order extends PanacheEntityBase {
         this.lineItems.add(new LineItem(lineItem.getItem(), lineItem.getPrice(), lineItem.getPreparedBy(), this));
     }
 
-    public String getId() {
-        return id;
+    public String getOrderId() {
+        return orderId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
     }
 
     public Collection<LineItem> getLineItems() {
