@@ -28,18 +28,18 @@ services:
     networks:
       - my-network
 
-  zookeeper:
-    image: strimzi/kafka:0.11.4-kafka-2.1.0
-    command: [
-        "sh", "-c",
-        "bin/zookeeper-server-start.sh config/zookeeper.properties"
-    ]
-    ports:
+#  zookeeper:
+#    image: strimzi/kafka:0.11.4-kafka-2.1.0
+#    command: [
+#        "sh", "-c",
+#        "bin/zookeeper-server-start.sh config/zookeeper.properties"
+#    ]
+#    ports:
       - "2181:2181"
-    environment:
-      LOG_DIR: /tmp/logs
-    networks:
-      - my-network
+#    environment:
+#      LOG_DIR: /tmp/logs
+#    networks:
+#      - my-network
 
   kafka:
     image: strimzi/kafka:0.11.4-kafka-2.1.0
