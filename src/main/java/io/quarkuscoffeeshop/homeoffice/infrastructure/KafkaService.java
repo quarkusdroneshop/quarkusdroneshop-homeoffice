@@ -23,6 +23,9 @@ public class KafkaService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(KafkaService.class);
 
+    @Inject
+    OrderRepository orderRepository;
+    
     @Incoming(ORDERS_CREATED)
     @Blocking
     @Transactional
