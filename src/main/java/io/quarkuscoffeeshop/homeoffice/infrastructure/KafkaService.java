@@ -31,6 +31,8 @@ public class KafkaService {
         LOGGER.debug("IngressOrder received: {}", orderRecord);
         Order order = convertOrdeRecordToOrder(orderRecord);
         LOGGER.debug("Order : {}", order);
+        //test
+        orderRepository.persist(order);
     }
 
     protected Order convertOrdeRecordToOrder(final OrderRecord orderRecord) {

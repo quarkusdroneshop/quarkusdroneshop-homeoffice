@@ -33,6 +33,7 @@ public class HomeOfficeInitializer {
                 add("ATLANTA");
                 add("RALEIGH");
                 add("CHARLOTTE");
+                add("TOKYO");
             }});
         }
     }
