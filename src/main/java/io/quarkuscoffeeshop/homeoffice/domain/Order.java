@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
+import javax.transaction.Transactional;
 
 import java.beans.Transient;
 import java.math.BigDecimal;
@@ -15,7 +16,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 
-@Entity @Table(name="Orders") @RegisterForReflection
+@Entity 
+@Table(name="Orders") 
+@RegisterForReflection
 public class Order extends PanacheEntityBase {
 
     //@Transient
@@ -28,6 +31,8 @@ public class Order extends PanacheEntityBase {
     private List<LineItem> lineItems;
 
     BigDecimal total;
+
+    Item item;
 
     @Enumerated(EnumType.STRING)
     OrderSource orderSource;
@@ -48,7 +53,7 @@ public class Order extends PanacheEntityBase {
     }
 
     public Order(String orderId, List<LineItem> lineItems, OrderSource orderSource, String location, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
-        this.orderId = orderId;
+        this.orderId = UUID.randomUUID().toString();
         lineItems.forEach(lineItem -> {
             addLineItem(lineItem);
         });
@@ -137,6 +142,14 @@ public class Order extends PanacheEntityBase {
         return total;
     }
 
+    public Item getItem() {
+        return item;
+    }
+    
+    public Instant getCreatedAt() {
+        return createdTimestamp;
+    }; 
+
     public OrderSource getOrderSource() {
         return orderSource;
     }
@@ -197,7 +210,7 @@ public class Order extends PanacheEntityBase {
         ).list();
     }
 
-    public static List<Order> findBetweenForLocation(StoreLocation location, Instant startDate, Instant endDate) {
+    public static List<Order> findBetweenForLocation(Store location, Instant startDate, Instant endDate) {
         //logger.debug("Searching date between: {} and {} for {}", startDate, endDate, location);
         return find("location = :location AND orderPlacedTimestamp BETWEEN :startDate AND :endDate",
                 Parameters.with("location", location)

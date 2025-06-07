@@ -1,0 +1,2 @@
+-- Active: 1742870533872@@localhost@5432
+CREATE SCHEMA IF NOT EXISTS coffeeshop;

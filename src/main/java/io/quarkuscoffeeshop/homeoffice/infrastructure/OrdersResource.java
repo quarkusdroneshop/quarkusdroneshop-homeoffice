@@ -26,59 +26,23 @@ public class OrdersResource {
 
     @Inject
     OrderService orderService;
-
-    @Inject
-    MockerService orderMocker;
-
-
-
-    @Query("mockerPaused")
-    @Description("Get mocker status")
-    public boolean mockerRunning() {
-
-        return orderMocker.pause;
-    }
-
-    @Query("mockerTogglePause")
-    @Description("Set mocker on/off")
-    public boolean mockerToggleRunning(Boolean toggle) {
-        if (toggle){
-            logger.debug("mocker resumed");
-        }else{
-            logger.debug("mocker paused");
-        }
-        orderMocker.pause = toggle;
-        return orderMocker.pause;
-    }
-
+    
     /*
     Example Query
-    query orders {
-      ordersForLocation(location: "ATLANTA") {
-        id
-        location
-        lineItems {
-          id
-          item
-          price
-          preparedBy
-        }
-        total,
-        orderPlacedTimestamp,
-        orderCompletedTimestamp
-      }
+    {
+    "query": "query orders { ordersForLocation(location: \"TOKYO\") { orderId location lineItems { id item price preparedBy } total orderPlacedTimestamp orderCompletedTimestamp } }"
     }
      */
     @Query
     @Description("Get all orders from store by location")
-    public List<Order> getOrdersForLocation(String location) {
+    public List<Order> ordersForLocation(String location) {
         return Order.list("location", location);
     }
 
     @Query
     public List<LocationOrders> getOrdersByLocation() {
         List<LocationOrders> aggregate = new ArrayList<>();
-        for (StoreLocation location : StoreLocation.values()) {
+        for (Store location : Store.values()) {
             List<Order> locationOrders =  Order.list("location", location.name());
             aggregate.add(new LocationOrders(location.name(), locationOrders));
         }
@@ -101,15 +65,9 @@ public class OrdersResource {
     }
 
     /*
-    query productSalesByDate {
-      productSalesByDate (startDate:"2020-12-03", endDate:"2020-12-09") {
-        item,
-        sales{
-          item
-          date,
-          sales
-        }
-      }
+    Example Query(データを登録します)
+    {
+    "query": "query productSalesByDate { productSalesByDate(startDate: \"2025-06-01\", endDate: \"2025-06-30\") { item productItemSales { item date revenue salesTotal } } }"
     }
     */
     @Transactional
@@ -201,13 +159,9 @@ public class OrdersResource {
     }
 
     /*
-          query itemSalesTotalsByDate($startDate: String!, $endDate: String!){
-            itemSalesTotalsByDate (startDate: $startDate, endDate: $endDate) {
-                item,
-                revenue,
-                sales
-            }
-          }
+    {
+    "query": "query itemSalesTotalsByDate { itemSalesTotalsByDate(startDate: \"2025-01-01\", endDate: \"2025-12-31\") { item revenue salesTotal } }"
+    }
      */
     @Query
     public List<ItemSales> getItemSalesTotalsByDate(String startDate, String endDate){
@@ -238,18 +192,9 @@ public class OrdersResource {
         return sales;
     }
 
-    //example gql query
     /*
-    query {
-      storeServerSales {
-        server
-        store,
-        sales{
-          item,
-          sales,
-          revenue
-        }
-      }
+    {
+    "query": "query { storeServerSales { server store sales { item salesTotal revenue } } }"
     }
      */
     @Query
@@ -257,9 +202,9 @@ public class OrdersResource {
         //I have to come document this - a lot of Hashtable work to get a count of unique items sold by servers by location
         List<StoreServerSales> storeServerSalesList = new ArrayList<>();
 
-        for (StoreLocation location : StoreLocation.values()) {
+        for (Store location : Store.values()) {
 
-            Hashtable servers = new Hashtable();
+            Map<String, Map<Item, ItemSales>> servers = new HashMap<>();
 
 
             //get an array of all lineItems for the location
@@ -327,16 +272,8 @@ public class OrdersResource {
 
 
     /*
-    query {
-      storeServerSalesByDate (startDate:"2020-11-18", endDate:"2020-11-20") {
-        server
-        store,
-        sales{
-          item,
-          sales,
-          revenue
-        }
-      }
+    {
+    "query": "query { storeServerSalesByDate(startDate: \"2025-01-01\", endDate: \"2025-12-31\") { server store sales { item salesTotal revenue } } }"
     }
      */
     @Query
@@ -352,7 +289,7 @@ public class OrdersResource {
 
         //logger.debug("allOrders: " + allOrders.size());
 
-        for (StoreLocation location : StoreLocation.values()) {
+        for (Store location : Store.values()) {
 
             Hashtable servers = new Hashtable();
 

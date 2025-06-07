@@ -11,12 +11,17 @@ public enum Item {
     CAKEPOP(2.50), CROISSANT(3.25), MUFFIN(3.00), CROISSANT_CHOCOLATE(3.50);
 
     private final BigDecimal price;
-
+    
     Item(double price) {
         this.price = BigDecimal.valueOf(price);
+    }
+
+    Item(BigDecimal price) {
+        this.price = price;
     }
 
     public BigDecimal getPrice() {
         return this.price;
     }
+    
 }
