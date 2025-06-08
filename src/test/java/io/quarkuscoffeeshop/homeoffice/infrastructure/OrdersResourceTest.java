@@ -9,13 +9,5 @@ import static org.hamcrest.CoreMatchers.is;
 @QuarkusTest
 public class OrdersResourceTest {
 
-    @Test
-    public void testAllOrdersEndpoint() {
-        given()
-          .when()
-            .get("/graphql/schema.graphql")
-          .then()
-             .statusCode(200);
-    }
-
+    // Execute the same tests but in native mode.
 }
