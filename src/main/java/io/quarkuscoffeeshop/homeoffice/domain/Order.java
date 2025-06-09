@@ -26,7 +26,7 @@ public class Order extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) // または AUTO, SEQUENCE など
-    public Long id;
+    public String orderId;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "order", cascade = CascadeType.ALL)
     private List<LineItem> lineItems;
