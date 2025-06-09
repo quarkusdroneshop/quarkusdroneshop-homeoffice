@@ -13,6 +13,7 @@ import java.util.StringJoiner;
 public class LineItem extends PanacheEntity {
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "itemid", nullable = false)
     private Item item;
 
     private BigDecimal price;
