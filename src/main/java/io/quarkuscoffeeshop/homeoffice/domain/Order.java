@@ -25,7 +25,8 @@ public class Order extends PanacheEntityBase {
     static Logger logger = LoggerFactory.getLogger(Order.class);
 
     @Id
-    private String orderId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // または AUTO, SEQUENCE など
+    public Long id;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "order", cascade = CascadeType.ALL)
     private List<LineItem> lineItems;
