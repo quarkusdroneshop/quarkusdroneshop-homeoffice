@@ -25,8 +25,18 @@ public class Order extends PanacheEntityBase {
     static Logger logger = LoggerFactory.getLogger(Order.class);
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // または AUTO, SEQUENCE など
+    @Column(name = "order_id", nullable = false)
     public String orderId;
+
+    @Column(name = "location")
+    public String location;
+
+    @Column(name = "order_source")
+    public OrderSource orderSource;
+
+    @Column(name = "loyaltyMemberId")
+    public String loyaltyMemberId;
+
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "order", cascade = CascadeType.ALL)
     private List<LineItem> lineItems;
@@ -35,14 +45,11 @@ public class Order extends PanacheEntityBase {
 
     Item item;
 
-    @Enumerated(EnumType.STRING)
-    OrderSource orderSource;
+    // @Enumerated(EnumType.STRING)
+    // OrderSource orderSource;
 
     //@Enumerated(EnumType.STRING)
     //StoreLocation location;
-    String location;
-
-    String customerLoyaltyId;
 
     Instant orderPlacedTimestamp;
 
@@ -60,7 +67,7 @@ public class Order extends PanacheEntityBase {
         });
         this.orderSource = orderSource;
         this.location = location;
-        this.customerLoyaltyId = customerLoyaltyId;
+        this.loyaltyMemberId = customerLoyaltyId;
         this.orderPlacedTimestamp = orderPlacedTimestamp;
         this.orderCompletedTimestamp = orderCompletedTimestamp;
         this.total = lineItems
@@ -78,7 +85,7 @@ public class Order extends PanacheEntityBase {
                 .add("total=" + total)
                 .add("orderSource=" + orderSource)
                 .add("location='" + location + "'")
-                .add("customerLoyaltyId='" + customerLoyaltyId + "'")
+                .add("customerLoyaltyId='" + loyaltyMemberId + "'")
                 .add("orderPlacedTimestamp=" + orderPlacedTimestamp)
                 .add("orderCompletedTimestamp=" + orderCompletedTimestamp)
                 .toString();
@@ -96,7 +103,7 @@ public class Order extends PanacheEntityBase {
         if (total != null ? !total.equals(order.total) : order.total != null) return false;
         if (orderSource != order.orderSource) return false;
         if (location != null ? !location.equals(order.location) : order.location != null) return false;
-        if (customerLoyaltyId != null ? !customerLoyaltyId.equals(order.customerLoyaltyId) : order.customerLoyaltyId != null)
+        if (loyaltyMemberId != null ? !loyaltyMemberId.equals(order.loyaltyMemberId) : order.loyaltyMemberId != null)
             return false;
         if (orderPlacedTimestamp != null ? !orderPlacedTimestamp.equals(order.orderPlacedTimestamp) : order.orderPlacedTimestamp != null)
             return false;
@@ -110,7 +117,7 @@ public class Order extends PanacheEntityBase {
         result = 31 * result + (total != null ? total.hashCode() : 0);
         result = 31 * result + (orderSource != null ? orderSource.hashCode() : 0);
         result = 31 * result + (location != null ? location.hashCode() : 0);
-        result = 31 * result + (customerLoyaltyId != null ? customerLoyaltyId.hashCode() : 0);
+        result = 31 * result + (loyaltyMemberId != null ? loyaltyMemberId.hashCode() : 0);
         result = 31 * result + (orderPlacedTimestamp != null ? orderPlacedTimestamp.hashCode() : 0);
         result = 31 * result + (orderCompletedTimestamp != null ? orderCompletedTimestamp.hashCode() : 0);
         return result;
@@ -171,11 +178,11 @@ public class Order extends PanacheEntityBase {
     }
 
     public String getCustomerLoyaltyId() {
-        return customerLoyaltyId;
+        return loyaltyMemberId;
     }
 
     public void setCustomerLoyaltyId(String customerLoyaltyId) {
-        this.customerLoyaltyId = customerLoyaltyId;
+        this.loyaltyMemberId = customerLoyaltyId;
     }
 
     public Instant getOrderPlacedTimestamp() {
