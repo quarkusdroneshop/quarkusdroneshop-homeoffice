@@ -53,7 +53,7 @@ public class Order extends PanacheEntityBase {
     }
 
     public Order(String orderId, List<LineItem> lineItems, OrderSource orderSource, String location, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
-        this.orderId = UUID.randomUUID().toString();
+        this.orderId = orderId;
         lineItems.forEach(lineItem -> {
             addLineItem(lineItem);
         });
