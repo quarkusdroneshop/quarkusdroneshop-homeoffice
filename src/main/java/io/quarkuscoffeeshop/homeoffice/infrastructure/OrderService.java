@@ -45,7 +45,6 @@ public class OrderService {
     @Transactional
     public void process(OrderRecord orderRecord) {
         Order order = convertOrderRecordToOrder(orderRecord);
-        order.orderId = UUID.randomUUID().toString();
         order.persist();
     
         // //lineitems
@@ -102,7 +101,7 @@ public class OrderService {
             });
         }
         return new Order(
-                orderRecord.orderId(),
+                UUID.randomUUID().toString(),
                 lineItems,
                 orderRecord.orderSource(),
                 "TOKYO",
