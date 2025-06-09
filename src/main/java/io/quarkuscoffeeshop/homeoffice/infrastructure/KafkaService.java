@@ -29,7 +29,6 @@ public class KafkaService {
 
     @Incoming(ORDERS_CREATED)
     @Blocking
-    @Transactional
     public void onOrderCreated(final OrderRecord orderRecord) {
 
         LOGGER.debug("IngressOrder received: {}", orderRecord);

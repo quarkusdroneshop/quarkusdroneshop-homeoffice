@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -44,12 +45,13 @@ public class OrderService {
     @Transactional
     public void process(OrderRecord orderRecord) {
         Order order = convertOrderRecordToOrder(orderRecord);
+        order.orderId = UUID.randomUUID().toString();
         order.persist();
     
-        //lineitems
-        for (LineItem lineItem : order.getLineItems()) {
-            lineItem.persist();
-        }
+        // //lineitems
+        // for (LineItem lineItem : order.getLineItems()) {
+        //     lineItem.persist();
+        // }
     
         //itemsales
         for (LineItem lineItem : order.getLineItems()) {
