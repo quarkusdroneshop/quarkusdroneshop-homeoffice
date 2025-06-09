@@ -3,6 +3,7 @@ package io.quarkuscoffeeshop.homeoffice.domain;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import io.quarkuscoffeeshop.homeoffice.infrastructure.domain.StoreLocation;
 import io.smallrye.graphql.api.Scalar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,36 +38,38 @@ public class Order extends PanacheEntityBase {
     @Column(name = "loyaltyMemberId")
     public String loyaltyMemberId;
 
+    @Column(name = "total")
+    BigDecimal total;
+
+    @Column(name = "orderid")
+    public String externalOrderId;
+
+    @Column(name = "item")
+    Item item;
+
+    @Column(name = "orderplacedtimestamp")
+    Instant orderPlacedTimestamp;
+
+    @Column(name = "ordercompletedtimestamp")
+    Instant orderCompletedTimestamp;
+
+    @Column(name = "createdtimestamp")
+    Instant createdTimestamp;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "order", cascade = CascadeType.ALL)
     private List<LineItem> lineItems;
 
-    BigDecimal total;
-
-    Item item;
-
-    // @Enumerated(EnumType.STRING)
-    // OrderSource orderSource;
-
-    //@Enumerated(EnumType.STRING)
-    //StoreLocation location;
-
-    Instant orderPlacedTimestamp;
-
-    Instant orderCompletedTimestamp;
-
-    Instant createdTimestamp;
-
     public Order() {
     }
 
-    public Order(String orderId, List<LineItem> lineItems, OrderSource orderSource, String location, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
+    public Order(String orderId, List<LineItem> lineItems, OrderSource orderSource, String location, String externalOrderId, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
         this.orderId = orderId;
         lineItems.forEach(lineItem -> {
             addLineItem(lineItem);
         });
         this.orderSource = orderSource;
         this.location = location;
+        this.externalOrderId = externalOrderId;
         this.loyaltyMemberId = customerLoyaltyId;
         this.orderPlacedTimestamp = orderPlacedTimestamp;
         this.orderCompletedTimestamp = orderCompletedTimestamp;
@@ -80,11 +83,12 @@ public class Order extends PanacheEntityBase {
     @Override
     public String toString() {
         return new StringJoiner(", ", Order.class.getSimpleName() + "[", "]")
-                .add("orderId='" + orderId + "'")
+                .add("order_Id='" + orderId + "'")
                 .add("lineItems=" + lineItems)
                 .add("total=" + total)
                 .add("orderSource=" + orderSource)
                 .add("location='" + location + "'")
+                .add("orderId='" + externalOrderId + "'")
                 .add("customerLoyaltyId='" + loyaltyMemberId + "'")
                 .add("orderPlacedTimestamp=" + orderPlacedTimestamp)
                 .add("orderCompletedTimestamp=" + orderCompletedTimestamp)
@@ -149,10 +153,6 @@ public class Order extends PanacheEntityBase {
     public BigDecimal getTotal() {
         return total;
     }
-
-    public Item getItem() {
-        return item;
-    }
     
     public Instant getCreatedAt() {
         return createdTimestamp;
@@ -175,6 +175,22 @@ public class Order extends PanacheEntityBase {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getExternalOrderId() {
+        return externalOrderId;
+    }
+
+    public void setExternalOrderId(String externalOrderId) {
+        this.externalOrderId = externalOrderId;
+    }
+
+    public Item getItem() {
+        return item;
+    }
+
+    public void setItem(Item item) {
+        this.item = item;
     }
 
     public String getCustomerLoyaltyId() {

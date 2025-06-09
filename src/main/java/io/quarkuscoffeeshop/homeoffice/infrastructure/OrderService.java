@@ -3,6 +3,7 @@ package io.quarkuscoffeeshop.homeoffice.infrastructure;
 import io.quarkuscoffeeshop.homeoffice.domain.Item;
 import io.quarkuscoffeeshop.homeoffice.domain.LineItem;
 import io.quarkuscoffeeshop.homeoffice.domain.Order;
+import io.quarkuscoffeeshop.homeoffice.domain.OrderSource;
 import io.quarkuscoffeeshop.homeoffice.domain.view.LineItemSalesReport;
 import io.quarkuscoffeeshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkuscoffeeshop.homeoffice.infrastructure.domain.StoreLocation;
@@ -79,13 +80,10 @@ public class OrderService {
         // averageorderuptime
         AverageOrderUpTime.updateFromOrderRecord(orderRecord);
     
-        // 7. storeserversales
+        // storeserversales
         StoreServerSales.persist(orderRecord);
     
-        // 8. storeserversales_itemsales
-        //StoreServerSalesItemSales.persist(orderRecord);
     }
-
 
     protected Order convertOrderRecordToOrder(final OrderRecord orderRecord) {
 
@@ -105,6 +103,7 @@ public class OrderService {
                 lineItems,
                 orderRecord.orderSource(),
                 "TOKYO",
+                UUID.randomUUID().toString(),
                 orderRecord.loyaltyMemberId() == null ? null : orderRecord.loyaltyMemberId(),
                 orderRecord.timestamp(),
                 Instant.now()

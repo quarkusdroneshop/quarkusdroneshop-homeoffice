@@ -32,35 +32,12 @@ public class KafkaService {
     public void onOrderCreated(final OrderRecord orderRecord) {
 
         LOGGER.debug("IngressOrder received: {}", orderRecord);
+        //orderRecord.setExternalOrderId(orderRecord.orderId());
         //Order order = convertOrderRecordToOrder(orderRecord);
         //LOGGER.debug("Order : {}", order);
         //order.persist(); 
         orderService.process(orderRecord);
     }
-
-    // protected Order convertOrderRecordToOrder(final OrderRecord orderRecord) {
-
-    //     List<LineItem> lineItems = new ArrayList<>();
-    //     if (orderRecord.baristaLineItems() != null) {
-    //         orderRecord.baristaLineItems().forEach(l -> {
-    //             lineItems.add(new LineItem(l.item(), BigDecimal.valueOf(3.00), l.name()));
-    //         });
-    //     }
-    //     if ((orderRecord.kitchenLineItems() != null)) {
-    //         orderRecord.kitchenLineItems().forEach(k -> {
-    //             lineItems.add(new LineItem(k.item(), BigDecimal.valueOf(3.50), k.name()));
-    //         });
-    //     }
-    //     return new Order(
-    //             orderRecord.orderId(),
-    //             lineItems,
-    //             orderRecord.orderSource(),
-    //             "TOKYO",
-    //             orderRecord.loyaltyMemberId() == null ? null : orderRecord.loyaltyMemberId(),
-    //             orderRecord.timestamp(),
-    //             Instant.now()
-    //     );
-    // }
 
     @Incoming(ORDERS_UPDATED)
     @Blocking
