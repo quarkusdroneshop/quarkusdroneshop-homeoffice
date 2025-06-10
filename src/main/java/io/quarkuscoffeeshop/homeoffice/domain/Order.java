@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
 import javax.transaction.Transactional;
-import javax.persistence.Transient;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -45,9 +45,6 @@ public class Order extends PanacheEntityBase {
     @Transient
     Item item;
 
-    @Column(name = "ordercount")
-    public int orderCount;
-
     @Column(name = "orderplacedtimestamp")
     Instant orderPlacedTimestamp;
 
@@ -57,7 +54,7 @@ public class Order extends PanacheEntityBase {
     @Column(name = "createdtimestamp")
     Instant createdTimestamp;
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<LineItem> lineItems;
 
     public Order() {
@@ -68,22 +65,6 @@ public class Order extends PanacheEntityBase {
         lineItems.forEach(lineItem -> {
             addLineItem(lineItem);
         });
-        this.orderSource = orderSource;
-        this.location = location;
-        this.externalOrderId = externalOrderId;
-        this.loyaltyMemberId = customerLoyaltyId;
-        this.orderPlacedTimestamp = orderPlacedTimestamp;
-        this.orderCompletedTimestamp = orderCompletedTimestamp;
-        this.total = lineItems
-                .stream()
-                .map(item -> item.getPrice())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        this.setCreatedTimestamp();
-    }
-
-    public Order(String orderId, int orderCount, OrderSource orderSource, String location, String externalOrderId, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
-        this.orderId = orderId;
-        this.orderCount = orderCount;
         this.orderSource = orderSource;
         this.location = location;
         this.externalOrderId = externalOrderId;
@@ -208,14 +189,6 @@ public class Order extends PanacheEntityBase {
 
     public void setItem(Item item) {
         this.item = item;
-    }
-
-    public int getOrderCount() {
-        return orderCount;
-    }
-
-    public void setOrderCount(int orderCount) {
-        this.orderCount = orderCount;
     }
 
     public String getCustomerLoyaltyId() {

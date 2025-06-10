@@ -44,6 +44,7 @@ public class OrderService {
     @Transactional
     public void process(OrderRecord orderRecord) {
         Order order = convertOrderRecordToOrder(orderRecord);
+        order.persist();
         // System.out.println("■■■■■■■■■■■■■■■■■");
         // System.out.println(order.toString());
 
@@ -57,14 +58,11 @@ public class OrderService {
                     lineItem.getPrice().doubleValue(),
                     order.getCreatedAt()
                 );
+                itemSales.persist();
             }
-            int lineItemCount = order.getLineItems().size();
-            order.setOrderCount(lineItemCount);
-            
         } else {
             LOGGER.warn("Order {} has null lineItems", order.getOrderId());
         }
-        order.persist();
         
         // ここから追加処理
         List<ProductItemSales> salesList = convertOrderRecordToProductItemSales(orderRecord);
