@@ -81,6 +81,22 @@ public class Order extends PanacheEntityBase {
         this.setCreatedTimestamp();
     }
 
+    public Order(String orderId, int orderCount, OrderSource orderSource, String location, String externalOrderId, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
+        this.orderId = orderId;
+        this.orderCount = orderCount;
+        this.orderSource = orderSource;
+        this.location = location;
+        this.externalOrderId = externalOrderId;
+        this.loyaltyMemberId = customerLoyaltyId;
+        this.orderPlacedTimestamp = orderPlacedTimestamp;
+        this.orderCompletedTimestamp = orderCompletedTimestamp;
+        this.total = lineItems
+                .stream()
+                .map(item -> item.getPrice())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.setCreatedTimestamp();
+    }
+
     @Override
     public String toString() {
         return new StringJoiner(", ", Order.class.getSimpleName() + "[", "]")

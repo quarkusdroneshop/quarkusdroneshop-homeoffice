@@ -23,7 +23,7 @@ public class LineItem extends PanacheEntity {
     private String preparedBy;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id", nullable = false)
     Order order;
 
     public LineItem() {
