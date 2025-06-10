@@ -20,23 +20,29 @@ public class ItemSales extends PanacheEntity {
     public Item item;
 
     @NotNull
+    public String preparedBy;
+
+    @NotNull
     public long salesTotal;
+
+    @NotNull
+    public double price;
 
     @NotNull
     public Instant date;
 
     @NotNull
-    public BigDecimal revenue;
+    public double revenue;
 
     public ItemSales() {}
 
-    public ItemSales(Item item, long salesTotal, BigDecimal revenue){
+    public ItemSales(Item item, long salesTotal, double revenue){
         this.item = item;
         this.salesTotal = salesTotal;
         this.revenue = revenue;
     }
 
-    public ItemSales(Item item, long salesTotal, BigDecimal revenue, Instant date){
+    public ItemSales(Item item, long salesTotal, double revenue, Instant date){
         this.item = item;
         this.salesTotal = salesTotal;
         this.date = date;
@@ -44,12 +50,32 @@ public class ItemSales extends PanacheEntity {
     }
 
     public static void persist(OrderRecord orderRecord, Order order) {
-        Item item = order.getItem();                  // 商品
-        long salesTotal = 1L;                         // 一件＝1売上（固定）
-        BigDecimal revenue = item.getPrice();           // 金額
-        Instant date = order.getCreatedAt();          // 日付
+        Item item = order.getItem();
+        long salesTotal = 1L;
+        BigDecimal revenue = item.getPrice();
+        Instant date = order.getCreatedAt();
     
-        ItemSales itemSales = new ItemSales(item, salesTotal, revenue, date);
+        ItemSales itemSales = new ItemSales(item, salesTotal, revenue.doubleValue(), date);
         itemSales.persist();
+    }
+
+    public void setItem(Item item) {
+        this.item = item;
+    }
+
+    public void setPreparedBy(String preparedBy) {
+        this.preparedBy = preparedBy;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public void setSalesTotal(int salesTotal) {
+        this.salesTotal = salesTotal;
+    }
+
+    public void setRevenue(double revenue) {
+        this.revenue = revenue;
     }
 }

@@ -5,6 +5,7 @@ import io.quarkuscoffeeshop.homeoffice.domain.LineItem;
 import io.quarkuscoffeeshop.homeoffice.domain.Order;
 import io.quarkuscoffeeshop.homeoffice.domain.OrderSource;
 import io.quarkuscoffeeshop.homeoffice.domain.view.LineItemSalesReport;
+import io.quarkuscoffeeshop.homeoffice.infrastructure.domain.LineItemRecord;
 import io.quarkuscoffeeshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkuscoffeeshop.homeoffice.infrastructure.domain.StoreLocation;
 import io.quarkuscoffeeshop.homeoffice.viewmodels.ItemSales;
@@ -16,6 +17,9 @@ import io.quarkuscoffeeshop.homeoffice.viewmodels.StoreServerSales;
 import javax.enterprise.context.ApplicationScoped;
 import javax.transaction.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -23,10 +27,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class OrderService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OrderService.class);
 
     public List<Order> allOrders() {
         return Order.listAll();
@@ -36,77 +41,81 @@ public class OrderService {
         return Order.find("location = :location", new HashMap<String, Object>(){{ put("location", storeLocation); }}).list();
     }
 
-    public List<LineItem> getLineItemSales() {
-        List<LineItem> lineItemList = LineItem.listAll();
-        Map<Item, List<LineItem>> lineItemMap =
-                lineItemList.stream().collect(Collectors.groupingBy(LineItem::getItem));
-        return null;
-    }
-
     @Transactional
     public void process(OrderRecord orderRecord) {
         Order order = convertOrderRecordToOrder(orderRecord);
-        order.persist();
-    
-        // //lineitems
-        // for (LineItem lineItem : order.getLineItems()) {
-        //     lineItem.persist();
-        // }
-    
-        //itemsales
-        for (LineItem lineItem : order.getLineItems()) {
-            lineItem.setOrder(order);  // 外部キー紐付け
-            lineItem.persist();
-    
-            // LineItemごとにItemSalesを作成・保存
-            ItemSales itemSales = new ItemSales(
-                lineItem.getItem(),
-                1L,  // 1点の売上
-                lineItem.getPrice(),
-                order.getCreatedAt()  // または Instant.now()
-            );
-            itemSales.persist();
+        // System.out.println("■■■■■■■■■■■■■■■■■");
+        // System.out.println(order.toString());
+
+        if (order.getLineItems() != null) {
+            for (LineItem lineItem : order.getLineItems()) {
+                lineItem.setOrder(order);
+                lineItem.persist();
+                ItemSales itemSales = new ItemSales(
+                    lineItem.getItem(),
+                    1L,
+                    lineItem.getPrice().doubleValue(),
+                    order.getCreatedAt()
+                );
+            }
+            int lineItemCount = order.getLineItems().size();
+            order.setOrderCount(lineItemCount);
+            
+        } else {
+            LOGGER.warn("Order {} has null lineItems", order.getOrderId());
         }
+        order.persist();
         
-        // productsales / productitemsales
+        // ここから追加処理
         List<ProductItemSales> salesList = convertOrderRecordToProductItemSales(orderRecord);
+
         for (ProductItemSales sales : salesList) {
             ProductSales productSales = ProductSales.findByItem(sales.item);
+
+            if (productSales == null) {
+                productSales = new ProductSales(sales.item);
+                productSales.persist();
+            }
+
             productSales.productItemSales.add(sales);
             productSales.persist();
             sales.persist();
         }
 
-        // averageorderuptime
         AverageOrderUpTime.updateFromOrderRecord(orderRecord);
-    
-        // storeserversales
         StoreServerSales.persist(orderRecord);
-    
     }
 
     protected Order convertOrderRecordToOrder(final OrderRecord orderRecord) {
-
         List<LineItem> lineItems = new ArrayList<>();
-        if (orderRecord.baristaLineItems() != null) {
-            orderRecord.baristaLineItems().forEach(l -> {
-                lineItems.add(new LineItem(l.item(), BigDecimal.valueOf(3.00), l.name()));
-            });
+    
+        if (orderRecord.getBaristaLineItems() != null) {
+            for (LineItemRecord record : orderRecord.getBaristaLineItems()) {
+                BigDecimal price = BigDecimal.valueOf(record.getPrice());
+                //BigDecimal price = BigDecimal.valueOf(3.00); // 固定価格
+                Item item = record.getItem();
+                lineItems.add(new LineItem(item, price, "barista"));
+            }
         }
-        if ((orderRecord.kitchenLineItems() != null)) {
-            orderRecord.kitchenLineItems().forEach(k -> {
-                lineItems.add(new LineItem(k.item(), BigDecimal.valueOf(3.50), k.name()));
-            });
+        
+        if (orderRecord.getKitchenLineItems() != null) {
+            for (LineItemRecord record : orderRecord.getKitchenLineItems()) {
+                BigDecimal price = BigDecimal.valueOf(record.getPrice());
+                //BigDecimal price = BigDecimal.valueOf(3.50); // 固定価格
+                Item item = record.getItem();
+                lineItems.add(new LineItem(item, price, "kitchen"));
+            }
         }
+        
         return new Order(
-                UUID.randomUUID().toString(),
-                lineItems,
-                orderRecord.orderSource(),
-                "TOKYO",
-                UUID.randomUUID().toString(),
-                orderRecord.loyaltyMemberId() == null ? null : orderRecord.loyaltyMemberId(),
-                orderRecord.timestamp(),
-                Instant.now()
+            UUID.randomUUID().toString(),
+            lineItems,
+            orderRecord.orderSource(),
+            orderRecord.location() != null ? orderRecord.location() : "TOKYO",
+            orderRecord.externalOrderId(),
+            orderRecord.customerLoyaltyId(),
+            orderRecord.orderPlacedTimestamp(),
+            Instant.now()
         );
     }
 
@@ -115,17 +124,23 @@ public class OrderService {
         Map<Item, Long> itemCounts = new HashMap<>();
         Map<Item, BigDecimal> itemRevenue = new HashMap<>();
     
-        if (orderRecord.baristaLineItems() != null) {
-            for (var l : orderRecord.baristaLineItems()) {
-                itemCounts.merge(l.item(), 1L, Long::sum);
-                itemRevenue.merge(l.item(), BigDecimal.valueOf(3.00), BigDecimal::add);
+        if (orderRecord.getBaristaLineItems() != null) {
+            for (LineItemRecord record : orderRecord.getBaristaLineItems()) {
+                Item item = record.getItem();
+                //BigDecimal price = BigDecimal.valueOf(3.00); // barista用価格
+                BigDecimal price = BigDecimal.valueOf(record.getPrice());
+                itemCounts.merge(item, 1L, Long::sum);
+                itemRevenue.merge(item, price, BigDecimal::add);
             }
         }
-    
-        if (orderRecord.kitchenLineItems() != null) {
-            for (var k : orderRecord.kitchenLineItems()) {
-                itemCounts.merge(k.item(), 1L, Long::sum);
-                itemRevenue.merge(k.item(), BigDecimal.valueOf(3.50), BigDecimal::add);
+        
+        if (orderRecord.getKitchenLineItems() != null) {
+            for (LineItemRecord record : orderRecord.getKitchenLineItems()) {
+                Item item = record.getItem();
+                //BigDecimal price = BigDecimal.valueOf(3.50); // kitchen用価格
+                BigDecimal price = BigDecimal.valueOf(record.getPrice());
+                itemCounts.merge(item, 1L, Long::sum);
+                itemRevenue.merge(item, price, BigDecimal::add);
             }
         }
     
@@ -139,7 +154,6 @@ public class OrderService {
                 now
             ));
         }
-    
         return salesList;
     }
 

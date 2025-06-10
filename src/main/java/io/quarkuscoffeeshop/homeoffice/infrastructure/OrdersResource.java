@@ -55,10 +55,11 @@ public class OrdersResource {
 
         for (Item item : Item.values()) {
             long soldItems = LineItem.count("item", item);
+            BigDecimal price = item.getPrice();
             ItemSales itemSales = new ItemSales();
             itemSales.item = item;
             itemSales.salesTotal = soldItems;
-            itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal));
+            itemSales.revenue = price.multiply(BigDecimal.valueOf(itemSales.salesTotal)).doubleValue();
             sales.add(itemSales);
         }
         return sales;
@@ -183,7 +184,7 @@ public class OrdersResource {
             ItemSales itemSales = new ItemSales();
             itemSales.item = item;
             itemSales.salesTotal = soldItems.size();
-            itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal));
+            itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal)).doubleValue();
             sales.add(itemSales);
         }
         sales.sort((itemSales, t1) -> itemSales.item.name().compareTo(t1.item.name()));
@@ -227,19 +228,18 @@ public class OrdersResource {
                        //update
                        ItemSales itemSales = (ItemSales) items.get(lineItem.getItem());
                        itemSales.salesTotal  = itemSales.salesTotal + 1;
-                       itemSales.revenue = itemSales.revenue.add(lineItem.getPrice());
+                       itemSales.revenue = itemSales.revenue + lineItem.getPrice().doubleValue();
                        items.put(lineItem.getItem(), itemSales);
-
                    }else{
                        //new
-                       ItemSales itemSales = new ItemSales(lineItem.getItem(), 1, lineItem.getPrice());
+                       ItemSales itemSales = new ItemSales(lineItem.getItem(), 1, lineItem.getPrice().doubleValue());
                        items.put(lineItem.getItem(), itemSales);
                    }
                    servers.put(lineItem.getPreparedBy(),items);
 
                }else{
                    Hashtable items = new Hashtable();
-                   ItemSales itemSales = new ItemSales(lineItem.getItem(), 1, lineItem.getPrice());
+                   ItemSales itemSales = new ItemSales(lineItem.getItem(), 1, lineItem.getPrice().doubleValue());
                    items.put(lineItem.getItem(), itemSales);
 
                    //logger.debug("Adding to core - item: {}, array: {}",lineItem.getPreparedBy(), items.size());
@@ -259,8 +259,6 @@ public class OrdersResource {
                 itemSalesHashTable.forEach((k, v)->{
                     itemSales.add((ItemSales) v);
                 });
-                sales.sales = itemSales;
-
                 storeServerSalesList.add(sales);
             });
 
@@ -280,79 +278,53 @@ public class OrdersResource {
     public List<StoreServerSales> getStoreServerSalesByDate(String startDate, String endDate){
         Instant functionStart = Instant.now();
 
-        //I have to come document this - a lot of Hashtable work to get a count of unique items sold by servers by location
         List<StoreServerSales> storeServerSalesList = new ArrayList<>();
 
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
         List<Order> allOrders = Order.findBetween(start, end);
 
-        //logger.debug("allOrders: " + allOrders.size());
+        for (Store store : Store.values()) {
 
-        for (Store location : Store.values()) {
+            Map<String, Map<Item, ItemSales>> servers = new HashMap<>();
 
-            Hashtable servers = new Hashtable();
+            // Store に紐づく注文を抽出
+            List<Order> orders = allOrders.stream()
+                .filter(o -> store.name().equals(o.getLocation()))
+                .collect(Collectors.toList());
 
-            //get an array of all lineItems for the location
-            List<LineItem> locationLineItems = new ArrayList<>();
+            List<LineItem> lineItems = orders.stream()
+                .flatMap(order -> order.getLineItems().stream())
+                .collect(Collectors.toList());
 
-            //List<Order> locationOrders = Order.list("location", location.name());
-            List<Order> orders = allOrders.stream().filter(order -> order.getLocation().equals(location.name())).collect(Collectors.toList());
+            for (LineItem lineItem : lineItems){
+                String preparedBy = lineItem.getPreparedBy();
+                Item item = lineItem.getItem();
 
-            for( Order order : orders){
-                locationLineItems.addAll(order.getLineItems());
-            }
+                servers.computeIfAbsent(preparedBy, k -> new HashMap<>());
 
-            //logger.debug("Location: {} : lineItems {}", location.name(), locationLineItems.size() );
+                Map<Item, ItemSales> itemMap = servers.get(preparedBy);
 
-            for (LineItem lineItem : locationLineItems){
-                if (servers.containsKey(lineItem.getPreparedBy())){
-
-                    Hashtable items = (Hashtable) servers.get(lineItem.getPreparedBy());
-
-                    if (items.containsKey(lineItem.getItem())){
-                        //update
-                        ItemSales itemSales = (ItemSales) items.get(lineItem.getItem());
-                        itemSales.salesTotal  = itemSales.salesTotal + 1;
-                        itemSales.revenue = itemSales.revenue.add(lineItem.getPrice());
-                        items.put(lineItem.getItem(), itemSales);
-
-                    }else{
-                        //new
-                        ItemSales itemSales = new ItemSales(lineItem.getItem(), 1, lineItem.getPrice());
-                        items.put(lineItem.getItem(), itemSales);
+                itemMap.compute(item, (key, existing) -> {
+                    if (existing == null) {
+                        return new ItemSales(item, 1L, lineItem.getPrice().doubleValue());
+                    } else {
+                        existing.salesTotal += 1;
+                        existing.revenue = existing.revenue + lineItem.getPrice().doubleValue();
+                        return existing;
                     }
-                    servers.put(lineItem.getPreparedBy(),items);
-
-                }else{
-                    Hashtable items = new Hashtable();
-                    ItemSales itemSales = new ItemSales(lineItem.getItem(), 1, lineItem.getPrice());
-                    items.put(lineItem.getItem(), itemSales);
-
-                    servers.put(lineItem.getPreparedBy(), items);
-                }
+                });
             }
 
-            servers.forEach((key, value)->{
-                String server = (String) key;
-                Hashtable itemSalesHashTable = (Hashtable) servers.get(key);
-
+            for (Map.Entry<String, Map<Item, ItemSales>> entry : servers.entrySet()) {
                 StoreServerSales sales = new StoreServerSales();
-                sales.store = location.name();
-                sales.server = server;
-
-                List<ItemSales> itemSales = new ArrayList<>();
-                itemSalesHashTable.forEach((k, v)->{
-                    itemSales.add((ItemSales) v);
-                });
-                sales.sales = itemSales;
-
+                sales.store = store.name();
+                sales.server = entry.getKey();
+                //sales.sales = new ArrayList<>(entry.getValue().values());
                 storeServerSalesList.add(sales);
-            });
-
+            }
         }
 
-        //logger.debug("stores: " + storeServerSalesList.size());
         Instant functionEnd = Instant.now();
         System.out.println("getStoreServerSalesByDate: " + Duration.between(functionStart, functionEnd));
         return storeServerSalesList;

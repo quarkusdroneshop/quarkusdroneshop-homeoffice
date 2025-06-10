@@ -7,6 +7,8 @@ import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.Iterator;
+import java.util.List;
 
 @Entity
 @Table(name="LineItems")
@@ -103,4 +105,5 @@ public class LineItem extends PanacheEntity {
     public void setOrder(Order order) {
         this.order = order;
     }
+    
 }

@@ -10,8 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.persistence.*;
 import javax.transaction.Transactional;
-
-import java.beans.Transient;
+import javax.persistence.Transient;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -22,7 +21,6 @@ import java.util.*;
 @RegisterForReflection
 public class Order extends PanacheEntityBase {
 
-    //@Transient
     static Logger logger = LoggerFactory.getLogger(Order.class);
 
     @Id
@@ -44,8 +42,11 @@ public class Order extends PanacheEntityBase {
     @Column(name = "orderid")
     public String externalOrderId;
 
-    @Column(name = "item")
+    @Transient
     Item item;
+
+    @Column(name = "ordercount")
+    public int orderCount;
 
     @Column(name = "orderplacedtimestamp")
     Instant orderPlacedTimestamp;
@@ -61,7 +62,7 @@ public class Order extends PanacheEntityBase {
 
     public Order() {
     }
-
+            
     public Order(String orderId, List<LineItem> lineItems, OrderSource orderSource, String location, String externalOrderId, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
         this.orderId = orderId;
         lineItems.forEach(lineItem -> {
@@ -84,7 +85,7 @@ public class Order extends PanacheEntityBase {
     public String toString() {
         return new StringJoiner(", ", Order.class.getSimpleName() + "[", "]")
                 .add("order_Id='" + orderId + "'")
-                .add("lineItems=" + lineItems)
+                .add("lineItems=" + lineItems.stream())
                 .add("total=" + total)
                 .add("orderSource=" + orderSource)
                 .add("location='" + location + "'")
@@ -191,6 +192,14 @@ public class Order extends PanacheEntityBase {
 
     public void setItem(Item item) {
         this.item = item;
+    }
+
+    public int getOrderCount() {
+        return orderCount;
+    }
+
+    public void setOrderCount(int orderCount) {
+        this.orderCount = orderCount;
     }
 
     public String getCustomerLoyaltyId() {

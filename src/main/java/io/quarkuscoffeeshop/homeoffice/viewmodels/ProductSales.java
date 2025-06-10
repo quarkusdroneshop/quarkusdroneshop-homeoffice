@@ -19,12 +19,17 @@ public class ProductSales extends PanacheEntity {
 
     public Instant createdTimestamp;
 
-    //@OneToMany(fetch = FetchType.EAGER, mappedBy = "productsales", cascade = CascadeType.ALL)
     @OneToMany(targetEntity=ProductItemSales.class, fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     public List<ProductItemSales> productItemSales;
 
-    public ProductSales(){
+    public ProductSales() {
         productItemSales = new ArrayList<>();
+    }
+
+    public ProductSales(Item item) {
+        this.item = item;
+        this.productItemSales = new ArrayList<>();
+        this.createdTimestamp = Instant.now();
     }
 
     public ProductSales(Item item, List<ProductItemSales> sales){

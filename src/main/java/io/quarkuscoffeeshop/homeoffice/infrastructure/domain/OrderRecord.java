@@ -1,68 +1,74 @@
 package io.quarkuscoffeeshop.homeoffice.infrastructure.domain;
 
-import io.quarkuscoffeeshop.homeoffice.domain.OrderSource;
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
+import io.quarkuscoffeeshop.homeoffice.domain.OrderSource;
+import io.quarkuscoffeeshop.homeoffice.infrastructure.domain.LineItemRecord;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderRecord {
+
+
     private String orderId;
-    private OrderSource orderSource;
-    private EventType eventType;
-    private String loyaltyMemberId;
-    private Instant timestamp;
-    private String externalOrderId;
+    
+    @JsonProperty("baristaLineItems")
     private List<LineItemRecord> baristaLineItems;
+    
+    @JsonProperty("kitchenLineItems")
     private List<LineItemRecord> kitchenLineItems;
-    private LocalDateTime startTime;
-    private LocalDateTime endTime;
-    public Instant timeIn;
-    public Instant timeUp;
+    
+    @JsonProperty("price")
+    private double total;
 
-    // コンストラクタ
-    public OrderRecord(String orderId, OrderSource orderSource, EventType eventType, String loyaltyMemberId, String externalOrderId,
-                       Instant timestamp, List<LineItemRecord> baristaLineItems, List<LineItemRecord> kitchenLineItems) {
-        this.orderId = orderId;
-        this.orderSource = orderSource;
-        this.eventType = eventType;
-        this.externalOrderId = externalOrderId;
-        this.loyaltyMemberId = loyaltyMemberId;
-        this.timestamp = timestamp;
-        this.baristaLineItems = baristaLineItems;
-        this.kitchenLineItems = kitchenLineItems;
+    @JsonProperty("orderSource")
+    private OrderSource orderSource;
+
+    @JsonProperty("location")
+    private String location;
+
+    @JsonProperty("id")
+    private String externalOrderId;
+
+    @JsonProperty("loyaltyMemberId")
+    private String customerLoyaltyId;
+    
+    private Instant orderPlacedTimestamp;
+    private Instant orderCompletedTimestamp;
+
+    public OrderRecord() {
     }
 
-    // Getter
     public String orderId() { return orderId; }
+    public List<LineItemRecord> getBaristaLineItems() { return baristaLineItems; }
+    public List<LineItemRecord> getKitchenLineItems() { return kitchenLineItems; }
+    public double total() { return total; }
     public OrderSource orderSource() { return orderSource; }
+    public String location() { return location; }
     public String externalOrderId() { return externalOrderId; }
-    public EventType eventType() { return eventType; }
-    public String loyaltyMemberId() { return orderId; }
-    public Instant timestamp() { return timestamp; }
-    public List<LineItemRecord> baristaLineItems() { return baristaLineItems; }
-    public List<LineItemRecord> kitchenLineItems() { return kitchenLineItems; }
-
-    public Instant timeIn() { return timeIn; }
-    public Instant timeUp() { return timeUp; }
-
-    // Setter も必要なら追加（record ではできなかった mutable な操作に対応）
-    public void setTimeIn(Instant timeIn) { this.timeIn = timeIn; }
-    public void setTimeUp(Instant timeUp) { this.timeUp = timeUp; }
-    public void setExternalOrderId(String externalOrderId) { this.externalOrderId = externalOrderId; }
-
-    public LocalDateTime getStartTime() {
-        return startTime;
+    public String customerLoyaltyId() { return customerLoyaltyId; }
+    public Instant orderPlacedTimestamp() { return orderPlacedTimestamp; }
+    public Instant orderCompletedTimestamp() { return orderCompletedTimestamp; }
+    
+    public Instant timestamp() {
+        return orderPlacedTimestamp; // または orderCompletedTimestamp など必要に応じて
     }
 
-    public LocalDateTime getEndTime() {
-        return endTime;
-    }
-
-    // toString() も log出力のために定義しておくとよい
     @Override
     public String toString() {
-        return "OrderRecord{startTime=" + startTime + ", endTime=" + endTime + "}";
+        return "OrderRecord{" +
+                "orderId='" + orderId + '\'' +
+                ", baristaLineItems=" + baristaLineItems +
+                ", kitchenLineItems=" + kitchenLineItems +
+                ", total=" + total +
+                ", orderSource=" + orderSource +
+                ", location='" + location + '\'' +
+                ", externalOrderId='" + externalOrderId + '\'' +
+                ", customerLoyaltyId='" + customerLoyaltyId + '\'' +
+                ", orderPlacedTimestamp=" + orderPlacedTimestamp +
+                ", orderCompletedTimestamp=" + orderCompletedTimestamp +
+                '}';
     }
 }

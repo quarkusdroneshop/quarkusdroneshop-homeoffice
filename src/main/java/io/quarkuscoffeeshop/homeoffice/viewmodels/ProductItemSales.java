@@ -23,7 +23,6 @@ public class ProductItemSales extends PanacheEntity {
     public BigDecimal revenue;
 
     public ProductItemSales(){
-
     }
 
     public ProductItemSales(Item item, long salesTotal, BigDecimal revenue){
