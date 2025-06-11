@@ -9,17 +9,24 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name="LineItems")
 public class LineItem extends PanacheEntity {
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "itemid", nullable = false)
-    private Item item;
+    @Id
+    @GeneratedValue
+    public UUID id;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "item", nullable = false)
+    private Item item;  // ←カラム名も itemid から item に変えると混乱が減る
+
+    @Column(name = "price")
     private BigDecimal price;
 
+    @Column(name = "preparedBy")
     private String preparedBy;
 
     @ManyToOne(optional = false)

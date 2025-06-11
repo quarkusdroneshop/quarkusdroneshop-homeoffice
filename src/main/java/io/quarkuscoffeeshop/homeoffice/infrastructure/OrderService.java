@@ -58,7 +58,7 @@ public class OrderService {
                     lineItem.getPrice().doubleValue(),
                     order.getCreatedAt()
                 );
-                itemSales.persist();
+                //itemSales.persist();
             }
         } else {
             LOGGER.warn("Order {} has null lineItems", order.getOrderId());
