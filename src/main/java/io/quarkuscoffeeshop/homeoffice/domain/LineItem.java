@@ -15,10 +15,6 @@ import java.util.UUID;
 @Table(name="LineItems")
 public class LineItem extends PanacheEntity {
 
-    @Id
-    @GeneratedValue
-    public UUID id;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "item", nullable = false)
     private Item item;  // ←カラム名も itemid から item に変えると混乱が減る
