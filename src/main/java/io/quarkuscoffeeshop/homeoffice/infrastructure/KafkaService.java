@@ -32,7 +32,6 @@ public class KafkaService {
     public void onOrderCreated(final OrderRecord orderRecord) {
 
         LOGGER.debug("IngressOrder received: {}", orderRecord);
-        //orderRecord.setExternalOrderId(orderRecord.orderId());
         //Order order = convertOrderRecordToOrder(orderRecord);
         //LOGGER.debug("Order : {}", order);
         //order.persist(); 
@@ -48,6 +47,7 @@ public class KafkaService {
         //Order order = convertOrderRecordToOrder(orderRecord);
         //LOGGER.debug("Order : {}", order);
         //order.persist();
+        orderService.process(orderRecord);
     }
 
     @Incoming(LOYALTY_MEMBER_PURCHASE)
@@ -59,5 +59,6 @@ public class KafkaService {
         //Order order = convertOrderRecordToOrder(orderRecord);
         //LOGGER.debug("Order : {}", order);
         //order.persist();
+        orderService.process(orderRecord);
     }
 }

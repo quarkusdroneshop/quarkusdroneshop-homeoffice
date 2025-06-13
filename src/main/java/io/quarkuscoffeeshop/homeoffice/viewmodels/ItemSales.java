@@ -15,12 +15,13 @@ import java.util.Date;
 @Table(name="ItemSales")
 public class ItemSales extends PanacheEntity {
 
+    @ManyToOne
+    @JoinColumn(name = "store_server_sales_id")
+    private StoreServerSales storeServerSales;
+
     @NotNull
     @Enumerated(EnumType.STRING)
     public Item item;
-
-    @NotNull
-    public String preparedBy;
 
     @NotNull
     public long salesTotal;
@@ -29,10 +30,9 @@ public class ItemSales extends PanacheEntity {
     public double price;
 
     @NotNull
-    public Instant date;
-
-    @NotNull
     public double revenue;
+
+    public Instant date;
 
     public ItemSales() {}
 
@@ -42,36 +42,23 @@ public class ItemSales extends PanacheEntity {
         this.revenue = revenue;
     }
 
-    public ItemSales(Item item, long salesTotal, double revenue, Instant date){
+    public ItemSales(Item item, long salesTotal, double revenue, Instant date, double price) {
         this.item = item;
         this.salesTotal = salesTotal;
-        this.date = date;
         this.revenue = revenue;
-    }
-
-    public static void persist(OrderRecord orderRecord, Order order) {
-        Item item = order.getItem();
-        long salesTotal = 1L;
-        BigDecimal revenue = item.getPrice();
-        Instant date = order.getCreatedAt();
-    
-        ItemSales itemSales = new ItemSales(item, salesTotal, revenue.doubleValue(), date);
-        itemSales.persist();
+        this.date = Instant.now();
+        this.price = price;
     }
 
     public void setItem(Item item) {
         this.item = item;
     }
 
-    public void setPreparedBy(String preparedBy) {
-        this.preparedBy = preparedBy;
-    }
-
     public void setPrice(double price) {
         this.price = price;
     }
 
-    public void setSalesTotal(int salesTotal) {
+    public void setSalesTotal(long salesTotal) {
         this.salesTotal = salesTotal;
     }
 

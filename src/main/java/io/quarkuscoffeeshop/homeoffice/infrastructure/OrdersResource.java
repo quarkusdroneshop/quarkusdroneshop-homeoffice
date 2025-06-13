@@ -29,8 +29,20 @@ public class OrdersResource {
     
     /*
     Example Query
-    {
-    "query": "query orders { ordersForLocation(location: \"TOKYO\") { orderId location lineItems { id item price preparedBy } total orderPlacedTimestamp orderCompletedTimestamp } }"
+    query orders {
+        ordersForLocation(location: "TOKYO") {
+            orderId
+            location
+            lineItems {
+            id
+            item
+            price
+            preparedBy
+            }
+            total
+            orderPlacedTimestamp
+            orderCompletedTimestamp
+        }
     }
      */
     @Query
@@ -67,101 +79,127 @@ public class OrdersResource {
 
     /*
     Example Query(データを登録します)
-    {
-    "query": "query productSalesByDate { productSalesByDate(startDate: \"2025-06-01\", endDate: \"2025-06-30\") { item productItemSales { item date revenue salesTotal } } }"
+    query productSalesByDate {
+        productSalesByDate(startDate: "2025-06-01", endDate: "2025-06-30") {
+            item
+            productItemSales {
+            item
+            saleDate
+            revenue
+            salesTotal
+            }
+        }
     }
     */
     @Transactional
     @Query
-    public List<ProductSales> getProductSalesByDate(String startDate, String endDate){
+    public List<ProductSales> getProductSalesByDate(String startDate, String endDate) {
         Instant functionStart = Instant.now();
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
+    
+        //ProductSales lastProductSales = ProductSales.find("order by id desc").firstResult();
+        // ProductSales lastProductSales = ProductSales.find(
+        // "SELECT ps FROM ProductSales ps LEFT JOIN FETCH ps.productItemSales ORDER BY ps.id DESC")
+        // .firstResult();
+        // // Instant createdInstant = lastProductSales.createdTimestamp.atZone(ZoneId.systemDefault()).toInstant();
+        // // List<Order> orders = (lastProductSales != null)
+        // //     ? Order.findBetweenAfter(start, end, createdInstant)
+        // //     : Order.findBetween(start, end);
+        // Instant createdInstant;
+        // if (lastProductSales != null && lastProductSales.createdTimestamp != null) {
+        //     createdInstant = lastProductSales.createdTimestamp.atZone(ZoneId.systemDefault()).toInstant();
+        // } else {
+        //     createdInstant = Instant.EPOCH; // または start など適切な初期値
+        // }
+        ProductSales lastProductSales = ProductSales.find(
+        "SELECT ps FROM ProductSales ps LEFT JOIN FETCH ps.productItemSales ORDER BY ps.id DESC")
+            .firstResult();
 
-        ProductSales lastProductSales = ProductSales.find("order by id desc").firstResult();
-        List<Order> orders = new ArrayList<Order>();
-        if (lastProductSales != null){
-            orders = Order.findBetweenAfter(start, end, lastProductSales.createdTimestamp);
-        }else{
-            orders = Order.findBetween(start, end);
+        List<Order> orders;
+        if (lastProductSales != null && lastProductSales.createdTimestamp != null) {
+            Instant createdInstant = lastProductSales.createdTimestamp.atZone(ZoneId.systemDefault()).toInstant();
+            orders = Optional.ofNullable(Order.findBetweenAfter(start, end, createdInstant))
+                .orElse(Collections.emptyList());
+        } else {
+            orders = Optional.ofNullable(Order.findBetween(start, end))
+                .orElse(Collections.emptyList());
         }
-        //List<Order> orders = Order.findBetween(start, end);
-        //logger.debug("Searching orders between: {} and {} in getItemSalesByDate - orders.size():{}", start, end, orders.size());
 
-
-        List<Instant> dateRange = getDatesBetween(start,end);
-
+        List<Instant> dateRange = getDatesBetween(start, end);
         List<ProductSales> productSalesList = new ArrayList<>();
-
+    
         for (Item item : Item.values()) {
+            // 検索または新規作成
             ProductSales productSales = ProductSales.findByItem(item);
+            if (productSales == null) {
+                productSales = new ProductSales(item);
+                productSales.productItemSales = new ArrayList<>();
+            }
+    
+            // アイテムを含むオーダーだけを抽出
+            List<Order> ordersWithProduct = orders.stream()
+                .filter(order -> order.getLineItems().stream()
+                    .anyMatch(lineItem -> lineItem.getItem().equals(item)))
+                .collect(Collectors.toList());
 
-            List<Order> ordersWithProduct = orders.stream().filter(
-                    order -> order.getLineItems().stream().filter(
-                            lineItem -> lineItem.getItem().equals(item)).count() > 0)
+    
+            for (Instant date : dateRange) {
+                Instant day = date.truncatedTo(ChronoUnit.DAYS);
+    
+                List<LineItem> lineItemsForDay = ordersWithProduct.stream()
+                    .filter(order -> order.getOrderPlacedTimestamp().truncatedTo(ChronoUnit.DAYS).equals(day))
+                    .flatMap(order -> order.getLineItems().stream()
+                        .filter(lineItem -> lineItem.getItem().equals(item)))
                     .collect(Collectors.toList());
-
-            dateRange.forEach(instant -> {
-
-                //get the orders for that day from the existing collection
-                List<Order> ordersForDay = ordersWithProduct.stream().filter(order -> {
-                    Instant analysisDate = instant.truncatedTo(ChronoUnit.DAYS);
-                    Instant orderDate = order.getOrderPlacedTimestamp().truncatedTo(ChronoUnit.DAYS);
-                    return analysisDate.equals(orderDate);
-                }).collect(Collectors.toList());
-
-                //logger.debug("getItemSalesByDate - day: {} orders: {}", instant, ordersForDay.size());
-
-                //get the line items for each order
-                List<LineItem> lineItemsForDay = new ArrayList<>();
-                for( Order order : ordersForDay){
-                    List<LineItem> items = order.getLineItems().stream().filter(lineItem -> lineItem.getItem().equals(item)).collect(Collectors.toList());
-                    lineItemsForDay.addAll(items);
-                }
-
-                long soldItems = lineItemsForDay.stream().filter(lineItem -> lineItem.getItem().equals(item)).count();
-
-                ProductItemSales itemSales = ProductItemSales.find("item = :item AND date = :date",
-                        Parameters.with("item", item).and("date", instant)
-                ).firstResult();
-
-                if (itemSales != null){
-                    //update existing object
-
-                    itemSales.salesTotal = itemSales.salesTotal + soldItems;
-                    itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal));
+    
+                long soldItems = lineItemsForDay.size();
+                if (soldItems == 0) continue;
+    
+                // 既存のレコードがある場合は更新、なければ作成
+                ProductItemSales itemSales = ProductItemSales.find("item = :item AND salesdate = :salesdate",
+                        Parameters.with("item", item).and("salesdate", day))
+                    .firstResult();
+    
+                if (itemSales != null) {
+                    BigDecimal price = item.getPrice();
+                    BigDecimal salesTotal = itemSales.salesTotal; // または getSalesTotal()
+                    if (price != null && salesTotal != null) {
+                        itemSales.revenue = price.multiply(salesTotal);
+                    } else {
+                        itemSales.revenue = BigDecimal.ZERO; // または適切なデフォルト値
+                    }
                 } else {
-                    itemSales = new ProductItemSales();
-                    itemSales.item = item;
-                    itemSales.salesTotal = soldItems;
-                    itemSales.date = instant;
-                    itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal));
-                    productSales.productItemSales.add(itemSales);
+                    ProductItemSales newItemSales = new ProductItemSales(
+                        item,
+                        BigDecimal.valueOf(soldItems),
+                        item.getPrice().multiply(BigDecimal.valueOf(soldItems)),
+                        day
+                    );
+                    newItemSales.productSales = productSales;
+                    productSales.productItemSales.add(newItemSales);
+                    newItemSales.persist();
                 }
-            });
+            }
+            
             productSales.createdTimestamp = functionStart;
             productSales.persist();
             productSalesList.add(productSales);
         }
-
+    
         Instant functionEnd = Instant.now();
         System.out.println("getProductSalesByDate: " + Duration.between(functionStart, functionEnd));
         productSalesList.sort(Comparator.comparing(ProductSales::getItem));
         return productSalesList;
     }
 
-    public static List<Instant> getDatesBetween(Instant startDate, Instant endDate) {
-
-        long numOfDaysBetween = ChronoUnit.DAYS.between(startDate, endDate);
-        return IntStream.iterate(0, i -> i + 1)
-                .limit(numOfDaysBetween)
-                .mapToObj(i -> startDate.plus(i, ChronoUnit.DAYS))
-                .collect(Collectors.toList());
-    }
-
     /*
-    {
-    "query": "query itemSalesTotalsByDate { itemSalesTotalsByDate(startDate: \"2025-01-01\", endDate: \"2025-12-31\") { item revenue salesTotal } }"
+    query itemSalesTotalsByDate {
+        itemSalesTotalsByDate(startDate: "2025-01-01", endDate: "2025-12-31") {
+            item
+            revenue
+            salesTotal
+        }
     }
      */
     @Query
@@ -194,8 +232,16 @@ public class OrdersResource {
     }
 
     /*
-    {
-    "query": "query { storeServerSales { server store sales { item salesTotal revenue } } }"
+    query {
+        storeServerSales {
+            server
+            store
+            itemSales {
+            item
+            salesTotal
+            price
+            }
+        }
     }
      */
     @Query
@@ -238,7 +284,7 @@ public class OrdersResource {
                    servers.put(lineItem.getPreparedBy(),items);
 
                }else{
-                   Hashtable items = new Hashtable();
+                   Map<Item, ItemSales> items = new HashMap<>();
                    ItemSales itemSales = new ItemSales(lineItem.getItem(), 1, lineItem.getPrice().doubleValue());
                    items.put(lineItem.getItem(), itemSales);
 
@@ -263,70 +309,70 @@ public class OrdersResource {
             });
 
         }
-
-        //logger.debug("stores: " + storeServerSalesList.size());
         return storeServerSalesList;
     }
 
 
     /*
-    {
-    "query": "query { storeServerSalesByDate(startDate: \"2025-01-01\", endDate: \"2025-12-31\") { server store sales { item salesTotal revenue } } }"
+    query {
+        storeServerSalesByDate(startDate: "2025-01-01", endDate: "2025-12-31") {
+            server
+            store
+            sales {
+            item
+            salesTotal
+            revenue
+            }
+        }
     }
      */
     @Query
-    public List<StoreServerSales> getStoreServerSalesByDate(String startDate, String endDate){
-        Instant functionStart = Instant.now();
-
-        List<StoreServerSales> storeServerSalesList = new ArrayList<>();
+    public List<StoreServerSales> getStoreServerSalesByDate(String startDate, String endDate) {
 
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
-        List<Order> allOrders = Order.findBetween(start, end);
+        List<StoreServerSales> storeServerSalesList = new ArrayList<>();
 
-        for (Store store : Store.values()) {
-
+        for (Store location : Store.values()) {
             Map<String, Map<Item, ItemSales>> servers = new HashMap<>();
 
-            // Store に紐づく注文を抽出
-            List<Order> orders = allOrders.stream()
-                .filter(o -> store.name().equals(o.getLocation()))
-                .collect(Collectors.toList());
+            List<Order> orders = Order.findBetweenByLocation(location.name(), start, end);
 
-            List<LineItem> lineItems = orders.stream()
-                .flatMap(order -> order.getLineItems().stream())
-                .collect(Collectors.toList());
-
-            for (LineItem lineItem : lineItems){
-                String preparedBy = lineItem.getPreparedBy();
-                Item item = lineItem.getItem();
-
-                servers.computeIfAbsent(preparedBy, k -> new HashMap<>());
-
-                Map<Item, ItemSales> itemMap = servers.get(preparedBy);
-
-                itemMap.compute(item, (key, existing) -> {
-                    if (existing == null) {
-                        return new ItemSales(item, 1L, lineItem.getPrice().doubleValue());
-                    } else {
-                        existing.salesTotal += 1;
-                        existing.revenue = existing.revenue + lineItem.getPrice().doubleValue();
-                        return existing;
+            for (Order order : orders) {
+                for (LineItem lineItem : order.getLineItems()) {
+                    if (lineItem.getPreparedBy() == null || lineItem.getItem() == null) {
+                        continue; // skip null entries
                     }
-                });
+
+                    String server = lineItem.getPreparedBy();
+                    Item item = lineItem.getItem();
+                    BigDecimal price = lineItem.getPrice();
+
+                    servers.putIfAbsent(server, new HashMap<>());
+                    Map<Item, ItemSales> itemMap = servers.get(server);
+
+                    itemMap.compute(item, (k, v) -> {
+                        if (v == null) {
+                            return new ItemSales(item, 1, price.doubleValue());
+                        } else {
+                            v.salesTotal += 1;
+                            v.revenue += price.doubleValue();
+                            return v;
+                        }
+                    });
+                }
             }
 
-            for (Map.Entry<String, Map<Item, ItemSales>> entry : servers.entrySet()) {
-                StoreServerSales sales = new StoreServerSales();
-                sales.store = store.name();
-                sales.server = entry.getKey();
-                //sales.sales = new ArrayList<>(entry.getValue().values());
-                storeServerSalesList.add(sales);
+            // MapからStoreServerSalesリストを構築
+            for (Map.Entry<String, Map<Item, ItemSales>> serverEntry : servers.entrySet()) {
+                StoreServerSales serverSales = new StoreServerSales();
+                serverSales.store = location.name();
+                serverSales.server = serverEntry.getKey();
+                serverSales.itemSales = new ArrayList<>(serverEntry.getValue().values());
+                storeServerSalesList.add(serverSales);
             }
         }
 
-        Instant functionEnd = Instant.now();
-        System.out.println("getStoreServerSalesByDate: " + Duration.between(functionStart, functionEnd));
         return storeServerSalesList;
     }
 
@@ -336,7 +382,8 @@ public class OrdersResource {
         Instant now = Instant.now();
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
-        AverageOrderUpTime averageOrderUpTime = AverageOrderUpTime.find("order by id desc").firstResult();
+        AverageOrderUpTime averageOrderUpTime = AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
+
         List<Order> orders = new ArrayList<Order>();
         if (averageOrderUpTime != null){
             orders = Order.findBetweenAfter(start, end, averageOrderUpTime.calculatedAt);
@@ -367,10 +414,16 @@ public class OrdersResource {
                 averageOrderUpTime.orderCount = averageOrderUpTime.orderCount + (int) orders.stream().count();
                 averageOrderUpTime.calculatedAt = now;
                 averageOrderUpTime.persist();
-            }
-            Instant functionEnd = Instant.now();
-            System.out.println("getAverageOrderUpTime: " + Duration.between(now, functionEnd));
+        }        
+            //Instant functionEnd = Instant.now();
             return averageOrderUpTime.averageTime;
         }
+    }
+
+    public static List<Instant> getDatesBetween(Instant startDate, Instant endDate) {
+        long numOfDaysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        return IntStream.range(0, (int) numOfDaysBetween)
+            .mapToObj(i -> startDate.plus(i, ChronoUnit.DAYS))
+            .collect(Collectors.toList());
     }
 }

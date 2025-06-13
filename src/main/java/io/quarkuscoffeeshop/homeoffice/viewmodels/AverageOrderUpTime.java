@@ -27,14 +27,13 @@ public class AverageOrderUpTime extends PanacheEntity {
     public int orderCount;
     public Instant calculatedAt;
 
-    public static void updateFromOrderRecord(OrderRecord orderRecord) {
-
-        Instant placed = orderRecord.orderPlacedTimestamp();
-        Instant completed = orderRecord.orderCompletedTimestamp();
+    public static AverageOrderUpTime fromOrderRecord(Order order) {
+        Instant placed = order.getOrderPlacedTimestamp();
+        Instant completed = order.getOrderCompletedTimestamp();
     
         if (placed == null || completed == null) {
-            LOGGER.warn("Start or end time is null. Skipping update for record: {}", orderRecord);
-            return;
+            LOGGER.warn("Start or end time is null. Skipping update for record: {}", order);
+            return null;
         }
     
         long newUpTimeSeconds = Duration.between(placed, completed).getSeconds();
@@ -43,7 +42,7 @@ public class AverageOrderUpTime extends PanacheEntity {
     
         if (current == null) {
             current = new AverageOrderUpTime();
-            current.averageTime = (int)newUpTimeSeconds;
+            current.averageTime = (int) newUpTimeSeconds;
             current.orderCount = 1;
         } else {
             int totalTime = current.averageTime * current.orderCount;
@@ -51,8 +50,18 @@ public class AverageOrderUpTime extends PanacheEntity {
             current.orderCount += 1;
             current.averageTime = totalTime / current.orderCount;
         }
-    
         current.calculatedAt = Instant.now();
-        current.persist();
+        return current;
+    }
+
+    public static AverageOrderUpTime fromOrder(Order order) {
+        if (order == null || order.orderCompletedTimestamp == null || order.orderPlacedTimestamp == null) {
+            return null;
+        }
+    
+        Duration duration = Duration.between(order.orderPlacedTimestamp, order.orderCompletedTimestamp);
+    
+        AverageOrderUpTime averageOrderUpTime = new AverageOrderUpTime();
+        return averageOrderUpTime;
     }
 }

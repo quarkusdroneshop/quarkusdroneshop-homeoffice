@@ -6,13 +6,12 @@ import java.util.List;
 import io.quarkuscoffeeshop.homeoffice.domain.OrderSource;
 import io.quarkuscoffeeshop.homeoffice.infrastructure.domain.LineItemRecord;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Objects;
 
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderRecord {
 
-
-    private String orderId;
     
     @JsonProperty("baristaLineItems")
     private List<LineItemRecord> baristaLineItems;
@@ -32,11 +31,18 @@ public class OrderRecord {
     @JsonProperty("id")
     private String externalOrderId;
 
+    @JsonProperty("orderCompletedTimestamp")
+    public String CompletedOrderId;
+
     @JsonProperty("loyaltyMemberId")
     private String customerLoyaltyId;
-    
+
+    @JsonProperty("orderId")
+    private String orderId;
+
     private Instant orderPlacedTimestamp;
     private Instant orderCompletedTimestamp;
+    public Double timestamp;
 
     public OrderRecord() {
     }
@@ -49,8 +55,8 @@ public class OrderRecord {
     public String location() { return location; }
     public String externalOrderId() { return externalOrderId; }
     public String customerLoyaltyId() { return customerLoyaltyId; }
-    public Instant orderPlacedTimestamp() { return orderPlacedTimestamp; }
-    public Instant orderCompletedTimestamp() { return orderCompletedTimestamp; }
+    public Instant orderPlacedTime() { return orderPlacedTimestamp; }
+    public Instant orderCompletedTime() { return orderCompletedTimestamp; }
     
     public Instant timestamp() {
         return orderPlacedTimestamp; // または orderCompletedTimestamp など必要に応じて
@@ -71,4 +77,28 @@ public class OrderRecord {
                 ", orderCompletedTimestamp=" + orderCompletedTimestamp +
                 '}';
     }
+
+    public Instant orderPlacedTimestamp() {
+        return Instant.now();  // ORDERS_CREATED時に設定（正確に取るならフィールド持つ）
+    }
+
+    public Instant orderCompletedTimestamp() {
+        if (orderPlacedTimestamp != null) {
+            return Instant.ofEpochSecond(timestamp.longValue());
+        }
+        return null;
+    }
+
+    public String getOrderId() {
+        return externalOrderId != null ? externalOrderId : orderId;
+    }
+
+    public String setderId() {
+        return orderId;
+    }
+
+    public String getExternalOrderId() {
+        return externalOrderId;
+    }
+
 }

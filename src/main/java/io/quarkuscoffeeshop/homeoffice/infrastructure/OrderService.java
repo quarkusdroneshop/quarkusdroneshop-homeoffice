@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -43,45 +44,52 @@ public class OrderService {
 
     @Transactional
     public void process(OrderRecord orderRecord) {
-        Order order = convertOrderRecordToOrder(orderRecord);
-        order.persist();
-        // System.out.println("■■■■■■■■■■■■■■■■■");
-        // System.out.println(order.toString());
+        // --- 既存コード ---
+        // どちらかのIDにマッチするOrderを検索
+        String orderId = orderRecord.orderId(); // 外部システムが使うID
+        Order order = Order.find("cast(orderid as text) = ?1", orderId).firstResult();
+        boolean existenceOrder = (order != null);
 
-        if (order.getLineItems() != null) {
-            for (LineItem lineItem : order.getLineItems()) {
-                lineItem.setOrder(order);
-                lineItem.persist();
-                ItemSales itemSales = new ItemSales(
-                    lineItem.getItem(),
-                    1L,
-                    lineItem.getPrice().doubleValue(),
-                    order.getCreatedAt()
+        if (existenceOrder == true) {
+            order.orderCompletedTimestamp = Instant.now();
+            order.persist();  // ここで UPDATE が発行される
+
+            // 追加: AverageOrderUpTime の更新
+            AverageOrderUpTime updated = AverageOrderUpTime.fromOrderRecord(order);
+            if (updated != null) {
+                updated.persist();
+            }
+
+         } else {
+            order = convertOrderRecordToOrder(orderRecord);
+            order.persist();
+
+            // ここで salesList を取得
+            List<ProductItemSales> salesList = convertOrderRecordToProductItemSales(orderRecord);
+
+            //
+            for (ProductItemSales sales : salesList) {
+                ProductSales productSales = ProductSales.findByItem(sales.item);
+            
+                if (productSales == null) {
+                    productSales = new ProductSales(sales.item);
+                }
+            
+                // sales の情報を使って新しい itemSales を作成
+                ProductItemSales itemSales = new ProductItemSales(
+                    sales.item,
+                    sales.salesTotal,
+                    sales.revenue,
+                    Instant.now()
                 );
-                //itemSales.persist();
-            }
-        } else {
-            LOGGER.warn("Order {} has null lineItems", order.getOrderId());
-        }
-        
-        // ここから追加処理
-        List<ProductItemSales> salesList = convertOrderRecordToProductItemSales(orderRecord);
-
-        for (ProductItemSales sales : salesList) {
-            ProductSales productSales = ProductSales.findByItem(sales.item);
-
-            if (productSales == null) {
-                productSales = new ProductSales(sales.item);
+                
+                productSales.addProductItemSale(itemSales);
                 productSales.persist();
+
+                //
+                StoreServerSales.persist(orderRecord);
             }
-
-            productSales.productItemSales.add(sales);
-            productSales.persist();
-            sales.persist();
         }
-
-        AverageOrderUpTime.updateFromOrderRecord(orderRecord);
-        StoreServerSales.persist(orderRecord);
     }
 
     protected Order convertOrderRecordToOrder(final OrderRecord orderRecord) {
@@ -92,6 +100,8 @@ public class OrderService {
                 BigDecimal price = BigDecimal.valueOf(record.getPrice());
                 //BigDecimal price = BigDecimal.valueOf(3.00); // 固定価格
                 Item item = record.getItem();
+                // 必要なフィールドを追加でセット
+                //itemSales.setPreparedBy(sales.preparedBy); // ← preparedBy をセット
                 lineItems.add(new LineItem(item, price, "barista"));
             }
         }
@@ -141,18 +151,32 @@ public class OrderService {
                 itemRevenue.merge(item, price, BigDecimal::add);
             }
         }
-    
+        
         Instant now = Instant.now();
         List<ProductItemSales> salesList = new ArrayList<>();
+        System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■");
+        System.out.println(salesList.toString());
         for (Item item : itemCounts.keySet()) {
-            salesList.add(new ProductItemSales(
-                item,
-                itemCounts.get(item),
-                itemRevenue.get(item),
-                now
-            ));
+            BigDecimal revenue = itemRevenue.get(item);
+            BigDecimal salesTotal = itemRevenue.get(item);
+            ProductItemSales sales = new ProductItemSales(item, salesTotal, revenue, now);
+            System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■");
+            System.out.println(sales.toString());
+            sales.setSalesTotal(revenue);
+            sales.setSalesTotal(salesTotal);
+            salesList.add(sales);
         }
-        return salesList;
-    }
+        System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■");
+        System.out.println(salesList.toString());
 
+        System.out.println("BaristaLineItems: " + orderRecord.getBaristaLineItems());
+        System.out.println("KitchenLineItems: " + orderRecord.getKitchenLineItems());
+
+        System.out.println("itemCounts before loop: " + itemCounts);
+        System.out.println("itemRevenue before loop: " + itemRevenue);
+        
+        return salesList;
+
+    }
 }
+

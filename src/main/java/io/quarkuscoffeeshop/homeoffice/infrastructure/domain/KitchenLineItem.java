@@ -2,11 +2,14 @@ package io.quarkuscoffeeshop.homeoffice.infrastructure.domain;
 
 import javax.persistence.GeneratedValue;
 import io.quarkuscoffeeshop.homeoffice.domain.Item;
-
+import io.quarkuscoffeeshop.homeoffice.viewmodels.StoreServerSales;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import java.math.BigDecimal;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+
 import java.util.Objects;
 
 
@@ -19,10 +22,13 @@ public class KitchenLineItem {
     public Item item;
     public Double price;
     public String name;
-
         public Item getItem() {
         return item;
     }
+
+    @ManyToOne
+    @JoinColumn(name = "store_server_sales_id")  // 所有側でマッピング
+    private StoreServerSales storeServerSales;
 
     public void setItem(Item item) {
         this.item = item;

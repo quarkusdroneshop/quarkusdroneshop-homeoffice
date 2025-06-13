@@ -5,6 +5,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.Iterator;
@@ -15,9 +16,13 @@ import java.util.UUID;
 @Table(name="LineItems")
 public class LineItem extends PanacheEntity {
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "order_id")
+    public Order order;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "item", nullable = false)
-    private Item item;  // ←カラム名も itemid から item に変えると混乱が減る
+    private Item item;
 
     @Column(name = "price")
     private BigDecimal price;
@@ -25,9 +30,9 @@ public class LineItem extends PanacheEntity {
     @Column(name = "preparedBy")
     private String preparedBy;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "order_id")
-    public Order order;
+    @Column(name = "preparedDate")
+    private String preparedDate;
+
 
     public LineItem() {
     }
@@ -38,7 +43,7 @@ public class LineItem extends PanacheEntity {
         this.preparedBy = preparedBy;
     }
 
-    public LineItem(Item item, BigDecimal price, String preparedBy, Order order) {
+    public LineItem(Item item, BigDecimal price, String preparedBy, Order order ) {
         this.item = item;
         this.price = price;
         this.preparedBy = preparedBy;

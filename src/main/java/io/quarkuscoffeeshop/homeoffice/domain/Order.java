@@ -30,6 +30,7 @@ public class Order extends PanacheEntityBase {
     @Column(name = "location")
     public String location;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "order_source")
     public OrderSource orderSource;
 
@@ -43,16 +44,16 @@ public class Order extends PanacheEntityBase {
     public String externalOrderId;
 
     @Transient
-    Item item;
+    public Item item;
 
     @Column(name = "orderplacedtimestamp")
-    Instant orderPlacedTimestamp;
+    public Instant orderPlacedTimestamp;
 
     @Column(name = "ordercompletedtimestamp")
-    Instant orderCompletedTimestamp;
+    public Instant orderCompletedTimestamp;
 
     @Column(name = "createdtimestamp")
-    Instant createdTimestamp;
+    public Instant createdTimestamp;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<LineItem> lineItems;
@@ -151,18 +152,19 @@ public class Order extends PanacheEntityBase {
     public BigDecimal getTotal() {
         return total;
     }
-    
-    public Instant getCreatedAt() {
-        return createdTimestamp;
-    }; 
 
-    public OrderSource getOrderSource() {
-        return orderSource;
+    public Instant getCreatedTimestamp() {
+        return createdTimestamp;
     }
 
     public void setCreatedTimestamp() {
         this.createdTimestamp = Instant.now();
     }
+    
+    public OrderSource getOrderSource() {
+        return orderSource;
+    }
+
     public void setOrderSource(OrderSource orderSource) {
         this.orderSource = orderSource;
     }
@@ -225,11 +227,17 @@ public class Order extends PanacheEntityBase {
 
     public static List<Order> findBetweenAfter(Instant startDate, Instant endDate, Instant createdTimestamp) {
         //logger.debug("Searching date between: {} and {}", startDate, endDate);
-        return find("orderPlacedTimestamp BETWEEN :startDate AND :endDate AND createdTimestamp >= :createdTimestamp",
-                Parameters.with("startDate", startDate)
-                        .and("endDate", endDate)
-                        .and("createdTimestamp", createdTimestamp)
+        
+        return find("orderPlacedTimestamp BETWEEN :startDate AND :endDate",
+            Parameters.with("startDate", startDate)
+                      .and("endDate", endDate)
         ).list();
+        
+        // return find("orderPlacedTimestamp BETWEEN :startDate AND :endDate AND createdTimestamp >= :createdTimestamp",
+        //         Parameters.with("startDate", startDate)
+        //                 .and("endDate", endDate)
+        //                 .and("createdTimestamp", createdTimestamp)
+        // ).list();
     }
 
     public static List<Order> findBetweenForLocation(Store location, Instant startDate, Instant endDate) {
@@ -239,5 +247,14 @@ public class Order extends PanacheEntityBase {
                         .and("startDate", startDate)
                         .and("endDate", endDate)
         ).list();
+    }
+
+    public static Order findByExternalOrderId(String externalOrderId) {
+        return find("externalOrderId", externalOrderId).firstResult();
+    }
+
+    public static List<Order> findBetweenByLocation(String location, Instant start, Instant end) {
+        return list("location = ?1 AND orderPlacedTimestamp >= ?2 AND orderPlacedTimestamp < ?3",
+            location, start, end);
     }
 }
