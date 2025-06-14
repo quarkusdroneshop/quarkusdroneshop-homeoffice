@@ -48,18 +48,17 @@ public class OrderService {
         // どちらかのIDにマッチするOrderを検索
         System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■");
         String orderId = orderRecord.orderId(); // 外部システムが使うID
-
         Order order = Order.find("cast(orderid as text) = ?1", orderId).firstResult();
-        System.out.println(order.toString());
         boolean existenceOrder = (order != null);
-        System.out.println(existenceOrder);
 
         if (existenceOrder == true) {
             order.orderCompletedTimestamp = Instant.now();
             order.persist();  // ここで UPDATE が発行される
 
+            System.out.println("■■■■■■■■■■AAAA■■■■■■■■■■■■■■");
             // 追加: AverageOrderUpTime の更新
             AverageOrderUpTime updated = AverageOrderUpTime.fromOrderRecord(order);
+            System.out.println("■■■■■■■■■■BBBB■■■■■■■■■■■■■■");
             if (updated != null) {
                 updated.persist();
             }
@@ -126,7 +125,7 @@ public class OrderService {
             orderRecord.location() != null ? orderRecord.location() : "TOKYO",
             orderRecord.externalOrderId(),
             orderRecord.customerLoyaltyId(),
-            orderRecord.orderPlacedTimestamp(),
+            Instant.now(),
             Instant.now()
         );
     }

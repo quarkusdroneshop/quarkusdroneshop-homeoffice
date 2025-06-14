@@ -28,47 +28,48 @@ public class OrderRecord {
     @JsonProperty("location")
     private String location;
 
-    @JsonProperty("id")
+    @JsonProperty("orderId")
     private String externalOrderId;
 
     @JsonProperty("orderCompletedTimestamp")
-    public String CompletedOrderId;
+    public Instant orderCompletedTimestamp;
+
+    @JsonProperty("orderPlacedTimestamp")
+    public Instant orderPlacedTimestamp;
 
     @JsonProperty("loyaltyMemberId")
-    private String customerLoyaltyId;
+    private String customerLoyalty;
 
-    @JsonProperty("orderId")
-    private String orderId;
+    // @JsonProperty("orderId")
+    // private String orderId;
 
-    private Instant orderPlacedTimestamp;
-    private Instant orderCompletedTimestamp;
     public Instant timestamp;
 
     public OrderRecord() {
     }
 
-    public String orderId() { return orderId; }
+    public String orderId() { return externalOrderId; }
     public List<LineItemRecord> getBaristaLineItems() { return baristaLineItems; }
     public List<LineItemRecord> getKitchenLineItems() { return kitchenLineItems; }
     public double total() { return total; }
     public OrderSource orderSource() { return orderSource; }
     public String location() { return location; }
     public String externalOrderId() { return externalOrderId; }
-    public String customerLoyaltyId() { return customerLoyaltyId; }
+    public String customerLoyaltyId() { return customerLoyalty; }
     public Instant orderPlacedTime() { return orderPlacedTimestamp; }
     public Instant orderCompletedTime() { return orderCompletedTimestamp; }
 
     @Override
     public String toString() {
         return "OrderRecord{" +
-                "orderId='" + orderId + '\'' +
+                "orderId='" + externalOrderId + '\'' +
                 ", baristaLineItems=" + baristaLineItems +
                 ", kitchenLineItems=" + kitchenLineItems +
                 ", total=" + total +
                 ", orderSource=" + orderSource +
                 ", location='" + location + '\'' +
                 ", externalOrderId='" + externalOrderId + '\'' +
-                ", customerLoyaltyId='" + customerLoyaltyId + '\'' +
+                ", customerLoyaltyId='" + customerLoyalty + '\'' +
                 ", orderPlacedTimestamp=" + orderPlacedTimestamp +
                 ", orderCompletedTimestamp=" + orderCompletedTimestamp +
                 '}';
@@ -86,12 +87,12 @@ public class OrderRecord {
         return timestamp;
     }
 
-    public String getOrderId() {
-        return externalOrderId != null ? externalOrderId : orderId;
-    }
+    // public String getOrderId() {
+    //     return externalOrderId != null ? externalOrderId : externalOrderId;
+    // }
 
     public String setderId() {
-        return orderId;
+        return externalOrderId;
     }
 
     public String getExternalOrderId() {

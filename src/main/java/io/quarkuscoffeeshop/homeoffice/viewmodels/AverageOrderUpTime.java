@@ -31,6 +31,9 @@ public class AverageOrderUpTime extends PanacheEntity {
         Instant placed = order.getOrderPlacedTimestamp();
         Instant completed = order.getOrderCompletedTimestamp();
     
+        System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■AAAA");
+        System.out.println(order.getOrderPlacedTimestamp());
+        System.out.println(order.getOrderCompletedTimestamp());
         if (placed == null || completed == null) {
             LOGGER.warn("Start or end time is null. Skipping update for record: {}", order);
             return null;
