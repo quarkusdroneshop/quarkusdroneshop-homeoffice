@@ -38,12 +38,15 @@ public class AverageOrderUpTime extends PanacheEntity {
     
         long newUpTimeSeconds = Duration.between(placed, completed).getSeconds();
     
-        AverageOrderUpTime current = AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
+        AverageOrderUpTime current = AverageOrderUpTime.find("FROM AverageOrderUpTime ORDER BY calculatedAt DESC").firstResult();
     
         if (current == null) {
             current = new AverageOrderUpTime();
             current.averageTime = (int) newUpTimeSeconds;
             current.orderCount = 1;
+            current.calculatedAt = Instant.now();
+            current.persist(); // 初回 persist
+            return current;
         } else {
             int totalTime = current.averageTime * current.orderCount;
             totalTime += newUpTimeSeconds;
@@ -51,6 +54,7 @@ public class AverageOrderUpTime extends PanacheEntity {
             current.averageTime = totalTime / current.orderCount;
         }
         current.calculatedAt = Instant.now();
+        current.persist();
         return current;
     }
 

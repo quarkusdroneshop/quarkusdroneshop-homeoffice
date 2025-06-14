@@ -154,26 +154,16 @@ public class OrderService {
         
         Instant now = Instant.now();
         List<ProductItemSales> salesList = new ArrayList<>();
-        System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■");
         System.out.println(salesList.toString());
         for (Item item : itemCounts.keySet()) {
             BigDecimal revenue = itemRevenue.get(item);
             BigDecimal salesTotal = itemRevenue.get(item);
             ProductItemSales sales = new ProductItemSales(item, salesTotal, revenue, now);
-            System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■");
             System.out.println(sales.toString());
             sales.setSalesTotal(revenue);
             sales.setSalesTotal(salesTotal);
             salesList.add(sales);
         }
-        System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■");
-        System.out.println(salesList.toString());
-
-        System.out.println("BaristaLineItems: " + orderRecord.getBaristaLineItems());
-        System.out.println("KitchenLineItems: " + orderRecord.getKitchenLineItems());
-
-        System.out.println("itemCounts before loop: " + itemCounts);
-        System.out.println("itemRevenue before loop: " + itemRevenue);
         
         return salesList;
 
