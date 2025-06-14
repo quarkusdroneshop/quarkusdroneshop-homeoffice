@@ -42,7 +42,7 @@ public class OrderRecord {
 
     private Instant orderPlacedTimestamp;
     private Instant orderCompletedTimestamp;
-    public Double timestamp;
+    public Instant timestamp;
 
     public OrderRecord() {
     }
@@ -57,10 +57,6 @@ public class OrderRecord {
     public String customerLoyaltyId() { return customerLoyaltyId; }
     public Instant orderPlacedTime() { return orderPlacedTimestamp; }
     public Instant orderCompletedTime() { return orderCompletedTimestamp; }
-    
-    public Instant timestamp() {
-        return orderPlacedTimestamp; // または orderCompletedTimestamp など必要に応じて
-    }
 
     @Override
     public String toString() {
@@ -79,14 +75,15 @@ public class OrderRecord {
     }
 
     public Instant orderPlacedTimestamp() {
-        return Instant.now();  // ORDERS_CREATED時に設定（正確に取るならフィールド持つ）
+        return orderPlacedTimestamp;
     }
 
     public Instant orderCompletedTimestamp() {
-        if (orderPlacedTimestamp != null) {
-            return Instant.ofEpochSecond(timestamp.longValue());
-        }
-        return null;
+        return orderCompletedTimestamp;
+    }
+
+    public Instant timestamp() {
+        return timestamp;
     }
 
     public String getOrderId() {

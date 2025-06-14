@@ -39,6 +39,9 @@ public class AverageOrderUpTime extends PanacheEntity {
         long newUpTimeSeconds = Duration.between(placed, completed).getSeconds();
     
         AverageOrderUpTime current = AverageOrderUpTime.find("FROM AverageOrderUpTime ORDER BY calculatedAt DESC").firstResult();
+
+        System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■");
+        System.out.println(current.toString());
     
         if (current == null) {
             current = new AverageOrderUpTime();
