@@ -46,9 +46,13 @@ public class OrderService {
     public void process(OrderRecord orderRecord) {
         // --- 既存コード ---
         // どちらかのIDにマッチするOrderを検索
+        System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■");
         String orderId = orderRecord.orderId(); // 外部システムが使うID
+
         Order order = Order.find("cast(orderid as text) = ?1", orderId).firstResult();
+        System.out.println(order.toString());
         boolean existenceOrder = (order != null);
+        System.out.println(existenceOrder);
 
         if (existenceOrder == true) {
             order.orderCompletedTimestamp = Instant.now();
