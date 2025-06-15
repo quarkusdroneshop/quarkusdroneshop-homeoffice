@@ -402,13 +402,15 @@ public class OrdersResource {
             if (averageOrderUpTime == null){
                 int averageTime = (int)(totalTime / orders.size());
                 averageOrderUpTime = new AverageOrderUpTime();
-                averageOrderUpTime.averageTime = averageTime;
+                averageOrderUpTime.averageTime = Math.min(300, averageTime);
                 //averageOrderUpTime.orderCount = (int) orders.stream().count();
                 averageOrderUpTime.calculatedAt = now;
                 averageOrderUpTime.persist();
             }else{
                 int oldTotalTime = averageOrderUpTime.averageTime * averageOrderUpTime.orderCount;
-                averageOrderUpTime.averageTime = (int)((totalTime + oldTotalTime) / (averageOrderUpTime.orderCount + orders.size()));
+                averageOrderUpTime.averageTime = Math.min(300,
+                    (int) ((totalTime + oldTotalTime) / (averageOrderUpTime.orderCount + orders.size()))
+                );
                 //averageOrderUpTime.orderCount = averageOrderUpTime.orderCount + (int) orders.stream().count();
                 averageOrderUpTime.calculatedAt = now;
                 averageOrderUpTime.persist();
