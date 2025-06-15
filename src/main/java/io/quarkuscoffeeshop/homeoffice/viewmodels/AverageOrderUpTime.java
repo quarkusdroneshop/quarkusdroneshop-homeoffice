@@ -36,19 +36,23 @@ public class AverageOrderUpTime extends PanacheEntity {
             return null;
         }
     
-        double newUpTimeSeconds = Duration.between(placed, completed).getSeconds();
+        long newUpTimeSeconds = Duration.between(placed, completed).getSeconds();
         AverageOrderUpTime current = AverageOrderUpTime.find("FROM AverageOrderUpTime ORDER BY calculatedAt DESC").firstResult();
-        
+
         if (current == null) {
+            
+            System.out.println("■■■■■■■■■■■■■■■■■■A");
             current = new AverageOrderUpTime();
-            current.averageTime = ((int) newUpTimeSeconds)*10;
+            current.averageTime = ((int) newUpTimeSeconds);
             current.orderCount = 1;
-            current.calculatedAt = Instant.now();
+            System.out.println("■■A; "+current.toString());
         } else {
+            System.out.println("■■■■■■■■■■■■■■■■■■B");
             int totalTime = current.averageTime * current.orderCount;
             totalTime += newUpTimeSeconds;
             current.orderCount += 1;
-            current.averageTime = (totalTime / current.orderCount)*10;
+            current.averageTime = (totalTime / current.orderCount);
+            System.out.println("■■B; "+current.toString());
         }
         current.calculatedAt = Instant.now();
         current.persist();
@@ -59,9 +63,7 @@ public class AverageOrderUpTime extends PanacheEntity {
         if (order == null || order.orderCompletedTimestamp == null || order.orderPlacedTimestamp == null) {
             return null;
         }
-    
         Duration duration = Duration.between(order.orderPlacedTimestamp, order.orderCompletedTimestamp);
-    
         AverageOrderUpTime averageOrderUpTime = new AverageOrderUpTime();
         return averageOrderUpTime;
     }

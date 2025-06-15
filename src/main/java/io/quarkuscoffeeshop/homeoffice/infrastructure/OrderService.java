@@ -44,17 +44,14 @@ public class OrderService {
 
     @Transactional
     public void process(OrderRecord orderRecord) {
-        // --- 既存コード ---
-        // どちらかのIDにマッチするOrderを検索
-        String orderId = orderRecord.orderId(); // 外部システムが使うID
+        String orderId = orderRecord.orderId();
         Order order = Order.find("cast(orderid as text) = ?1", orderId).firstResult();
         boolean existenceOrder = (order != null);
 
         if (existenceOrder == true) {
             order.orderCompletedTimestamp = Instant.now();
-            order.persist();  // ここで UPDATE が発行される
+            order.persist();
 
-            // 追加: AverageOrderUpTime の更新
             AverageOrderUpTime updated = AverageOrderUpTime.fromOrderRecord(order);
             if (updated != null) {
                 updated.persist();
@@ -64,10 +61,8 @@ public class OrderService {
             order = convertOrderRecordToOrder(orderRecord);
             order.persist();
 
-            // ここで salesList を取得
             List<ProductItemSales> salesList = convertOrderRecordToProductItemSales(orderRecord);
 
-            //
             for (ProductItemSales sales : salesList) {
                 ProductSales productSales = ProductSales.findByItem(sales.item);
             
@@ -75,7 +70,6 @@ public class OrderService {
                     productSales = new ProductSales(sales.item);
                 }
             
-                // sales の情報を使って新しい itemSales を作成
                 ProductItemSales itemSales = new ProductItemSales(
                     sales.item,
                     sales.salesTotal,
@@ -86,7 +80,6 @@ public class OrderService {
                 productSales.addProductItemSale(itemSales);
                 productSales.persist();
 
-                //
                 StoreServerSales.persist(orderRecord);
             }
         }
