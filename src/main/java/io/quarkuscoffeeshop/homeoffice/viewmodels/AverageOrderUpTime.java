@@ -40,19 +40,14 @@ public class AverageOrderUpTime extends PanacheEntity {
         AverageOrderUpTime current = AverageOrderUpTime.find("FROM AverageOrderUpTime ORDER BY calculatedAt DESC").firstResult();
 
         if (current == null) {
-            
-            System.out.println("■■■■■■■■■■■■■■■■■■A");
             current = new AverageOrderUpTime();
-            current.averageTime = ((int) newUpTimeSeconds);
+            current.averageTime = ((int) newUpTimeSeconds)*60;
             current.orderCount = 1;
-            System.out.println("■■A; "+current.toString());
         } else {
-            System.out.println("■■■■■■■■■■■■■■■■■■B");
             int totalTime = current.averageTime * current.orderCount;
             totalTime += newUpTimeSeconds;
             current.orderCount += 1;
-            current.averageTime = (totalTime / current.orderCount);
-            System.out.println("■■B; "+current.toString());
+            current.averageTime = (totalTime / current.orderCount)*60;
         }
         current.calculatedAt = Instant.now();
         current.persist();
