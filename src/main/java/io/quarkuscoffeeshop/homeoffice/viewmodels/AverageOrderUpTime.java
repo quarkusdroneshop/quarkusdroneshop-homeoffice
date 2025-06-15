@@ -41,14 +41,14 @@ public class AverageOrderUpTime extends PanacheEntity {
         
         if (current == null) {
             current = new AverageOrderUpTime();
-            current.averageTime = (int) newUpTimeSeconds;
+            current.averageTime = ((int) newUpTimeSeconds)*10;
             current.orderCount = 1;
             current.calculatedAt = Instant.now();
         } else {
             int totalTime = current.averageTime * current.orderCount;
             totalTime += newUpTimeSeconds;
             current.orderCount += 1;
-            current.averageTime = totalTime / current.orderCount;
+            current.averageTime = (totalTime / current.orderCount)*10;
         }
         current.calculatedAt = Instant.now();
         current.persist();
