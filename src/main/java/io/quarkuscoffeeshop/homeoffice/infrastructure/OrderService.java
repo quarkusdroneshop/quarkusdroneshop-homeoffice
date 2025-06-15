@@ -46,7 +46,6 @@ public class OrderService {
     public void process(OrderRecord orderRecord) {
         // --- 既存コード ---
         // どちらかのIDにマッチするOrderを検索
-        System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■");
         String orderId = orderRecord.orderId(); // 外部システムが使うID
         Order order = Order.find("cast(orderid as text) = ?1", orderId).firstResult();
         boolean existenceOrder = (order != null);
@@ -55,10 +54,8 @@ public class OrderService {
             order.orderCompletedTimestamp = Instant.now();
             order.persist();  // ここで UPDATE が発行される
 
-            System.out.println("■■■■■■■■■■AAAA■■■■■■■■■■■■■■");
             // 追加: AverageOrderUpTime の更新
             AverageOrderUpTime updated = AverageOrderUpTime.fromOrderRecord(order);
-            System.out.println("■■■■■■■■■■BBBB■■■■■■■■■■■■■■");
             if (updated != null) {
                 updated.persist();
             }

@@ -31,32 +31,24 @@ public class AverageOrderUpTime extends PanacheEntity {
         Instant placed = order.getOrderPlacedTimestamp();
         Instant completed = order.getOrderCompletedTimestamp();
     
-        System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■AAAA");
-        System.out.println(order.getOrderPlacedTimestamp());
-        System.out.println(order.getOrderCompletedTimestamp());
         if (placed == null || completed == null) {
             LOGGER.warn("Start or end time is null. Skipping update for record: {}", order);
             return null;
         }
     
         double newUpTimeSeconds = Duration.between(placed, completed).getSeconds();
-        System.out.println("AAAAAAAAA "+(newUpTimeSeconds)*1000);
-
-    
         AverageOrderUpTime current = AverageOrderUpTime.find("FROM AverageOrderUpTime ORDER BY calculatedAt DESC").firstResult();
-
-        System.out.println("■■■■■■■■■■■■■■■■■■■■■■■■");
         
         if (current == null) {
             current = new AverageOrderUpTime();
-            current.averageTime = ((int) newUpTimeSeconds)*1000;
+            current.averageTime = (int) newUpTimeSeconds;
             current.orderCount = 1;
             current.calculatedAt = Instant.now();
         } else {
             int totalTime = current.averageTime * current.orderCount;
             totalTime += newUpTimeSeconds;
             current.orderCount += 1;
-            current.averageTime = (totalTime / current.orderCount)*1000;
+            current.averageTime = totalTime / current.orderCount;
         }
         current.calculatedAt = Instant.now();
         current.persist();
