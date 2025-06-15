@@ -39,7 +39,7 @@ public class AverageOrderUpTime extends PanacheEntity {
             return null;
         }
     
-        long newUpTimeSeconds = Duration.between(placed, completed).getSeconds();
+        double newUpTimeSeconds = Duration.between(placed, completed).getSeconds();
         System.out.println("AAAAAAAAA "+(newUpTimeSeconds)*1000);
 
     
