@@ -188,7 +188,6 @@ public class OrdersResource {
         }
     
         Instant functionEnd = Instant.now();
-        System.out.println("getProductSalesByDate: " + Duration.between(functionStart, functionEnd));
         productSalesList.sort(Comparator.comparing(ProductSales::getItem));
         return productSalesList;
     }
@@ -227,7 +226,6 @@ public class OrdersResource {
         }
         sales.sort((itemSales, t1) -> itemSales.item.name().compareTo(t1.item.name()));
         Instant functionEnd = Instant.now();
-        System.out.println("getItemSalesTotalsByDate: " + Duration.between(functionStart, functionEnd));
         return sales;
     }
 

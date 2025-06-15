@@ -154,12 +154,10 @@ public class OrderService {
         
         Instant now = Instant.now();
         List<ProductItemSales> salesList = new ArrayList<>();
-        System.out.println(salesList.toString());
         for (Item item : itemCounts.keySet()) {
             BigDecimal revenue = itemRevenue.get(item);
             BigDecimal salesTotal = itemRevenue.get(item);
             ProductItemSales sales = new ProductItemSales(item, salesTotal, revenue, now);
-            System.out.println(sales.toString());
             sales.setSalesTotal(revenue);
             sales.setSalesTotal(salesTotal);
             salesList.add(sales);
