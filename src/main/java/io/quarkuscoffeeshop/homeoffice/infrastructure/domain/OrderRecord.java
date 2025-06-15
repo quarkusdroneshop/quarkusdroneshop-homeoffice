@@ -28,7 +28,7 @@ public class OrderRecord {
     @JsonProperty("location")
     private String location;
 
-    @JsonProperty("orderId")
+    @JsonProperty("id")
     private String externalOrderId;
 
     @JsonProperty("orderCompletedTimestamp")
@@ -40,15 +40,15 @@ public class OrderRecord {
     @JsonProperty("loyaltyMemberId")
     private String customerLoyalty;
 
-    // @JsonProperty("orderId")
-    // private String orderId;
+    @JsonProperty("orderId")
+    private String orderId;
 
     public Instant timestamp;
 
     public OrderRecord() {
     }
 
-    public String orderId() { return externalOrderId; }
+    public String orderId() { return orderId; }
     public List<LineItemRecord> getBaristaLineItems() { return baristaLineItems; }
     public List<LineItemRecord> getKitchenLineItems() { return kitchenLineItems; }
     public double total() { return total; }
