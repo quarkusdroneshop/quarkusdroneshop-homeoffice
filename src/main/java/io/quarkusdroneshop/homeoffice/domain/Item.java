@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum Item {
     // Beverages
-    CAPPUCCINO(3.50), COFFEE_BLACK(3.00), COFFEE_WITH_ROOM(3.00),
+    CAPPUCCINO(3.50), QDC_A101(3.00), COFFEE_WITH_ROOM(3.00),
     ESPRESSO(3.75), ESPRESSO_DOUBLE(4.75), LATTE(3.75),
 
     // Food

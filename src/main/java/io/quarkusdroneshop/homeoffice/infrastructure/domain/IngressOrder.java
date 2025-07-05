@@ -16,8 +16,8 @@ public class IngressOrder {
     private final String loyaltyMemberId;
     private final Instant timestamp;
     private final EventType eventType;
-    private final List<IngressLineItem> baristaLineItems;
-    private final List<IngressLineItem> kitchenLineItems;
+    private final List<IngressLineItem> QDCA10LineItems;
+    private final List<IngressLineItem> QDCA10ProLineItems;
 
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
     public IngressOrder(
@@ -27,16 +27,16 @@ public class IngressOrder {
             @JsonProperty("loyaltyMemberId") String loyaltyMemberId,
             @JsonProperty("timestamp") Instant timestamp,
             @JsonProperty("eventType") EventType eventType,
-            @JsonProperty("baristaLineItems") List<IngressLineItem> baristaLineItems,
-            @JsonProperty("kitchenLineItems") List<IngressLineItem> kitchenLineItems) {
+            @JsonProperty("QDCA10LineItems") List<IngressLineItem> QDCA10LineItems,
+            @JsonProperty("QDCA10ProLineItems") List<IngressLineItem> QDCA10ProLineItems) {
         this.orderId = orderId;
         this.orderSource = orderSource;
         this.location = location;
         this.loyaltyMemberId = loyaltyMemberId;
         this.timestamp = timestamp;
         this.eventType = eventType;
-        this.baristaLineItems = baristaLineItems;
-        this.kitchenLineItems = kitchenLineItems;
+        this.QDCA10LineItems = QDCA10LineItems;
+        this.QDCA10ProLineItems = QDCA10ProLineItems;
     }
 
     public String getOrderId() {
@@ -63,11 +63,11 @@ public class IngressOrder {
         return Optional.ofNullable(eventType);
     }
 
-    public Optional<List<IngressLineItem>> getBaristaLineItems() {
-        return Optional.ofNullable(baristaLineItems);
+    public Optional<List<IngressLineItem>> getQDCA10LineItems() {
+        return Optional.ofNullable(QDCA10LineItems);
     }
 
     public Optional<List<IngressLineItem>> getKitßchenLineItems() {
-        return Optional.ofNullable(kitchenLineItems);
+        return Optional.ofNullable(QDCA10ProLineItems);
     }
 }

@@ -12,8 +12,9 @@ import javax.persistence.ManyToOne;
 
 import java.util.Objects;
 
+
 @Entity
-public class BaristaLineItem {
+public class QDCA10ProLineItem {
     @Id
     @GeneratedValue
     public Long id;

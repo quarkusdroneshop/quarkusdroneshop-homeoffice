@@ -88,23 +88,23 @@ public class OrderService {
     protected Order convertOrderRecordToOrder(final OrderRecord orderRecord) {
         List<LineItem> lineItems = new ArrayList<>();
     
-        if (orderRecord.getBaristaLineItems() != null) {
-            for (LineItemRecord record : orderRecord.getBaristaLineItems()) {
+        if (orderRecord.getQDCA10LineItems() != null) {
+            for (LineItemRecord record : orderRecord.getQDCA10LineItems()) {
                 BigDecimal price = BigDecimal.valueOf(record.getPrice());
                 //BigDecimal price = BigDecimal.valueOf(3.00); // 固定価格
                 Item item = record.getItem();
                 // 必要なフィールドを追加でセット
                 //itemSales.setPreparedBy(sales.preparedBy); // ← preparedBy をセット
-                lineItems.add(new LineItem(item, price, "barista"));
+                lineItems.add(new LineItem(item, price, "QDCA10"));
             }
         }
         
-        if (orderRecord.getKitchenLineItems() != null) {
-            for (LineItemRecord record : orderRecord.getKitchenLineItems()) {
+        if (orderRecord.getQDCA10ProLineItems() != null) {
+            for (LineItemRecord record : orderRecord.getQDCA10ProLineItems()) {
                 BigDecimal price = BigDecimal.valueOf(record.getPrice());
                 //BigDecimal price = BigDecimal.valueOf(3.50); // 固定価格
                 Item item = record.getItem();
-                lineItems.add(new LineItem(item, price, "kitchen"));
+                lineItems.add(new LineItem(item, price, "QDCA10Pro"));
             }
         }
         
@@ -125,20 +125,20 @@ public class OrderService {
         Map<Item, Long> itemCounts = new HashMap<>();
         Map<Item, BigDecimal> itemRevenue = new HashMap<>();
     
-        if (orderRecord.getBaristaLineItems() != null) {
-            for (LineItemRecord record : orderRecord.getBaristaLineItems()) {
+        if (orderRecord.getQDCA10LineItems() != null) {
+            for (LineItemRecord record : orderRecord.getQDCA10LineItems()) {
                 Item item = record.getItem();
-                //BigDecimal price = BigDecimal.valueOf(3.00); // barista用価格
+                //BigDecimal price = BigDecimal.valueOf(3.00); // QDCA10用価格
                 BigDecimal price = BigDecimal.valueOf(record.getPrice());
                 itemCounts.merge(item, 1L, Long::sum);
                 itemRevenue.merge(item, price, BigDecimal::add);
             }
         }
         
-        if (orderRecord.getKitchenLineItems() != null) {
-            for (LineItemRecord record : orderRecord.getKitchenLineItems()) {
+        if (orderRecord.getQDCA10ProLineItems() != null) {
+            for (LineItemRecord record : orderRecord.getQDCA10ProLineItems()) {
                 Item item = record.getItem();
-                //BigDecimal price = BigDecimal.valueOf(3.50); // kitchen用価格
+                //BigDecimal price = BigDecimal.valueOf(3.50); // QDCA10Pro用価格
                 BigDecimal price = BigDecimal.valueOf(record.getPrice());
                 itemCounts.merge(item, 1L, Long::sum);
                 itemRevenue.merge(item, price, BigDecimal::add);

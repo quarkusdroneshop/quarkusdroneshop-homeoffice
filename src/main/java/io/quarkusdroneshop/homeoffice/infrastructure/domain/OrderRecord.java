@@ -13,11 +13,11 @@ import java.util.Objects;
 public class OrderRecord {
 
     
-    @JsonProperty("baristaLineItems")
-    private List<LineItemRecord> baristaLineItems;
+    @JsonProperty("QDCA10LineItems")
+    private List<LineItemRecord> QDCA10LineItems;
     
-    @JsonProperty("kitchenLineItems")
-    private List<LineItemRecord> kitchenLineItems;
+    @JsonProperty("QDCA10ProLineItems")
+    private List<LineItemRecord> QDCA10ProLineItems;
     
     @JsonProperty("price")
     private double total;
@@ -49,8 +49,8 @@ public class OrderRecord {
     }
 
     public String orderId() { return orderId; }
-    public List<LineItemRecord> getBaristaLineItems() { return baristaLineItems; }
-    public List<LineItemRecord> getKitchenLineItems() { return kitchenLineItems; }
+    public List<LineItemRecord> getQDCA10LineItems() { return QDCA10LineItems; }
+    public List<LineItemRecord> getQDCA10ProLineItems() { return QDCA10ProLineItems; }
     public double total() { return total; }
     public OrderSource orderSource() { return orderSource; }
     public String location() { return location; }
@@ -63,8 +63,8 @@ public class OrderRecord {
     public String toString() {
         return "OrderRecord{" +
                 "orderId='" + externalOrderId + '\'' +
-                ", baristaLineItems=" + baristaLineItems +
-                ", kitchenLineItems=" + kitchenLineItems +
+                ", QDCA10LineItems=" + QDCA10LineItems +
+                ", QDCA10ProLineItems=" + QDCA10ProLineItems +
                 ", total=" + total +
                 ", orderSource=" + orderSource +
                 ", location='" + location + '\'' +
