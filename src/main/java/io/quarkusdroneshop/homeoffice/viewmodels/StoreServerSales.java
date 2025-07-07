@@ -21,10 +21,10 @@ public class StoreServerSales extends PanacheEntity {
     public String server;
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<QDCA10LineItem> QDCA10LineItems = new ArrayList<>();
+    public List<QDCA10LineItem> Qdca10LineItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<QDCA10ProLineItem> QDCA10ProLineItems = new ArrayList<>();
+    public List<QDCA10ProLineItem> Qdca10proLineItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<ItemSales> itemSales = new ArrayList<>();
@@ -33,16 +33,16 @@ public class StoreServerSales extends PanacheEntity {
         StoreServerSales storeServerSales = new StoreServerSales();
         storeServerSales.store = "TOKYO";
 
-        if (orderRecord.getQDCA10LineItems() != null) {
-            for (LineItemRecord lineItem : orderRecord.getQDCA10LineItems()) {
-                storeServerSales.QDCA10LineItems.add(toQDCA10LineItem(lineItem));
+        if (orderRecord.getQdca10LineItems() != null) {
+            for (LineItemRecord lineItem : orderRecord.getQdca10LineItems()) {
+                storeServerSales.Qdca10LineItems.add(toQDCA10LineItem(lineItem));
                 storeServerSales.server = "QDCA10";
                 storeServerSales.itemSales.add(toItemSales(lineItem));
             }
         }
-        if (orderRecord.getQDCA10ProLineItems() != null) {
-            for (LineItemRecord lineItem : orderRecord.getQDCA10ProLineItems()) {
-                storeServerSales.QDCA10ProLineItems.add(toQDCA10ProLineItem(lineItem));
+        if (orderRecord.getQdca10proLineItems() != null) {
+            for (LineItemRecord lineItem : orderRecord.getQdca10proLineItems()) {
+                storeServerSales.Qdca10proLineItems.add(toQDCA10ProLineItem(lineItem));
                 storeServerSales.server = "QDCA10Pro";
                 storeServerSales.itemSales.add(toItemSales(lineItem));
             }

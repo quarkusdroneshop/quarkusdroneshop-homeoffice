@@ -88,8 +88,8 @@ public class OrderService {
     protected Order convertOrderRecordToOrder(final OrderRecord orderRecord) {
         List<LineItem> lineItems = new ArrayList<>();
     
-        if (orderRecord.getQDCA10LineItems() != null) {
-            for (LineItemRecord record : orderRecord.getQDCA10LineItems()) {
+        if (orderRecord.getQdca10LineItems() != null) {
+            for (LineItemRecord record : orderRecord.getQdca10LineItems()) {
                 BigDecimal price = BigDecimal.valueOf(record.getPrice());
                 //BigDecimal price = BigDecimal.valueOf(3.00); // 固定価格
                 Item item = record.getItem();
@@ -99,8 +99,8 @@ public class OrderService {
             }
         }
         
-        if (orderRecord.getQDCA10ProLineItems() != null) {
-            for (LineItemRecord record : orderRecord.getQDCA10ProLineItems()) {
+        if (orderRecord.getQdca10proLineItems() != null) {
+            for (LineItemRecord record : orderRecord.getQdca10proLineItems()) {
                 BigDecimal price = BigDecimal.valueOf(record.getPrice());
                 //BigDecimal price = BigDecimal.valueOf(3.50); // 固定価格
                 Item item = record.getItem();
@@ -125,8 +125,8 @@ public class OrderService {
         Map<Item, Long> itemCounts = new HashMap<>();
         Map<Item, BigDecimal> itemRevenue = new HashMap<>();
     
-        if (orderRecord.getQDCA10LineItems() != null) {
-            for (LineItemRecord record : orderRecord.getQDCA10LineItems()) {
+        if (orderRecord.getQdca10LineItems() != null) {
+            for (LineItemRecord record : orderRecord.getQdca10LineItems()) {
                 Item item = record.getItem();
                 //BigDecimal price = BigDecimal.valueOf(3.00); // QDCA10用価格
                 BigDecimal price = BigDecimal.valueOf(record.getPrice());
@@ -135,8 +135,8 @@ public class OrderService {
             }
         }
         
-        if (orderRecord.getQDCA10ProLineItems() != null) {
-            for (LineItemRecord record : orderRecord.getQDCA10ProLineItems()) {
+        if (orderRecord.getQdca10proLineItems() != null) {
+            for (LineItemRecord record : orderRecord.getQdca10proLineItems()) {
                 Item item = record.getItem();
                 //BigDecimal price = BigDecimal.valueOf(3.50); // QDCA10Pro用価格
                 BigDecimal price = BigDecimal.valueOf(record.getPrice());
