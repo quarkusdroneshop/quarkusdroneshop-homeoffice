@@ -5,7 +5,7 @@ import io.quarkusdroneshop.homeoffice.domain.Item;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.LineItemRecord;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10LineItem;
-import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10ProLineItem;
+import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10proLineItem;
 
 
 import javax.persistence.*;
@@ -21,10 +21,10 @@ public class StoreServerSales extends PanacheEntity {
     public String server;
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<QdcaLineItem> Qdca10LineItems = new ArrayList<>();
+    public List<Qdca10LineItem> Qdca10LineItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<QdcaproLineItem> Qdca10proLineItems = new ArrayList<>();
+    public List<Qdca10proLineItem> Qdca10proLineItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<ItemSales> itemSales = new ArrayList<>();
@@ -60,7 +60,7 @@ public class StoreServerSales extends PanacheEntity {
     }
 
     public static Qdca10proLineItem toQdca10proLineItem(LineItemRecord lineItemRecord) {
-        Qdca10proLineItem item = new Qdca10ProLineItem();
+        Qdca10proLineItem item = new Qdca10proLineItem();
         item.setItem(lineItemRecord.getItem());
         item.setName(lineItemRecord.getName());
         item.setPrice(lineItemRecord.getPrice());

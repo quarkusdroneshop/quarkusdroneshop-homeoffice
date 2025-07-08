@@ -12,7 +12,7 @@ import javax.persistence.ManyToOne;
 import java.util.Objects;
 
 @Entity
-public class Qdca10ProLineItem {
+public class Qdca10proLineItem {
     @Id
     @GeneratedValue
     public Long id;
