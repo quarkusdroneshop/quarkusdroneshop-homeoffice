@@ -76,12 +76,13 @@ public class OrderService {
                     sales.revenue,
                     Instant.now()
                 );
-                
+            
                 productSales.addProductItemSale(itemSales);
-                productSales.persist();
-
-                StoreServerSales.persist(orderRecord);
+                productSales.persist(); // persist するが、まだ transaction は終わっていない
             }
+            
+            // ← ループの外で StoreServerSales を persist（この呼び出しの中で itemSales.persist() される）
+            StoreServerSales.persist(orderRecord);
         }
     }
 
