@@ -21,10 +21,10 @@ public class StoreServerSales extends PanacheEntity {
     public String server;
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<Qdca10LineItem> Qdca10LineItems = new ArrayList<>();
+    public List<QdcaLineItem> Qdca10LineItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<Qdca10ProLineItem> Qdca10proLineItems = new ArrayList<>();
+    public List<QdcaproLineItem> Qdca10proLineItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<ItemSales> itemSales = new ArrayList<>();
@@ -35,15 +35,15 @@ public class StoreServerSales extends PanacheEntity {
 
         if (orderRecord.getQdca10LineItems() != null) {
             for (LineItemRecord lineItem : orderRecord.getQdca10LineItems()) {
-                storeServerSales.Qdca10LineItems.add(toQDCA10LineItem(lineItem));
-                storeServerSales.server = "QDCA10";
+                storeServerSales.Qdca10LineItems.add(toQdca10LineItem(lineItem));
+                storeServerSales.server = "qdca10";
                 storeServerSales.itemSales.add(toItemSales(lineItem));
             }
         }
         if (orderRecord.getQdca10proLineItems() != null) {
             for (LineItemRecord lineItem : orderRecord.getQdca10proLineItems()) {
-                storeServerSales.Qdca10proLineItems.add(toQDCA10ProLineItem(lineItem));
-                storeServerSales.server = "QDCA10Pro";
+                storeServerSales.Qdca10proLineItems.add(toQdca10proLineItem(lineItem));
+                storeServerSales.server = "qdca10pro";
                 storeServerSales.itemSales.add(toItemSales(lineItem));
             }
         }
@@ -51,7 +51,7 @@ public class StoreServerSales extends PanacheEntity {
         storeServerSales.persist();
     }
 
-    public static Qdca10LineItem toQDCA10LineItem(LineItemRecord lineItemRecord) {
+    public static Qdca10LineItem toQdca10LineItem(LineItemRecord lineItemRecord) {
         Qdca10LineItem item = new Qdca10LineItem();
         item.setItem(lineItemRecord.getItem());
         item.setName(lineItemRecord.getName());
@@ -59,8 +59,8 @@ public class StoreServerSales extends PanacheEntity {
         return item;
     }
 
-    public static Qdca10ProLineItem toQDCA10ProLineItem(LineItemRecord lineItemRecord) {
-        Qdca10ProLineItem item = new Qdca10ProLineItem();
+    public static Qdca10proLineItem toQdca10proLineItem(LineItemRecord lineItemRecord) {
+        Qdca10proLineItem item = new Qdca10ProLineItem();
         item.setItem(lineItemRecord.getItem());
         item.setName(lineItemRecord.getName());
         item.setPrice(lineItemRecord.getPrice());
