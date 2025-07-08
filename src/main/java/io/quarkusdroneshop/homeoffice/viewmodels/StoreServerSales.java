@@ -47,7 +47,6 @@ public class StoreServerSales extends PanacheEntity {
                 storeServerSales.itemSales.add(toItemSales(lineItem,storeServerSales));
             }
         }
-
         storeServerSales.persist();
     }
 

@@ -15,7 +15,6 @@ import java.util.List;
 @Table(name="ProductSales")
 public class ProductSales extends PanacheEntity {
 
-    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
     public Item item;
