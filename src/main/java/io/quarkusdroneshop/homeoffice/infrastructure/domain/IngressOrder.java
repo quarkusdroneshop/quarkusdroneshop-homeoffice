@@ -27,8 +27,8 @@ public class IngressOrder {
             @JsonProperty("loyaltyMemberId") String loyaltyMemberId,
             @JsonProperty("timestamp") Instant timestamp,
             @JsonProperty("eventType") EventType eventType,
-            @JsonProperty("Qdca10LineItems") List<IngressLineItem> Qdca10LineItems,
-            @JsonProperty("Qdca10proLineItems") List<IngressLineItem> Qdca10proLineItems) {
+            @JsonProperty("qdca10LineItems") List<IngressLineItem> Qdca10LineItems,
+            @JsonProperty("qdca10proLineItems") List<IngressLineItem> Qdca10proLineItems) {
         this.orderId = orderId;
         this.orderSource = orderSource;
         this.location = location;
