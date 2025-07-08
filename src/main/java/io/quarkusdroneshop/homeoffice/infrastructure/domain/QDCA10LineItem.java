@@ -13,7 +13,7 @@ import javax.persistence.ManyToOne;
 import java.util.Objects;
 
 @Entity
-public class QDCA10LineItem {
+public class Qdca10LineItem {
     @Id
     @GeneratedValue
     public Long id;
@@ -26,7 +26,7 @@ public class QDCA10LineItem {
     }
 
     @ManyToOne
-    @JoinColumn(name = "store_server_sales_id")  // 所有側でマッピング
+    @JoinColumn(name = "store_server_sales_id")
     private StoreServerSales storeServerSales;
 
     public void setItem(Item item) {

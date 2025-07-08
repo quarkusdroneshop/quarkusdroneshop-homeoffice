@@ -8,11 +8,10 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum Item {
     // Beverages
-    CAPPUCCINO(3.50), QDC_A101(3.00), COFFEE_WITH_ROOM(3.00),
-    ESPRESSO(3.75), ESPRESSO_DOUBLE(4.75), LATTE(3.75),
+    QDC_A101(135.50), QDC_A102(155.50), QDC_A103(144.00),QDC_A104_AC(256.25), QDC_A104_AT(4.75),
 
     // Food
-    CAKEPOP(2.50), CROISSANT(3.25), MUFFIN(3.00), CROISSANT_CHOCOLATE(3.50);
+    QDC_A105_Pro01(553.00), QDC_A105_Pro02(633.25), QDC_A105_Pro03(735.50), QDC_A105_Pro04(955.50);
 
     private final BigDecimal price;
 

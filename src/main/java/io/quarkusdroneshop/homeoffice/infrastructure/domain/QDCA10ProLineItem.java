@@ -14,7 +14,7 @@ import java.util.Objects;
 
 
 @Entity
-public class QDCA10ProLineItem {
+public class Qdca10ProLineItem {
     @Id
     @GeneratedValue
     public Long id;
@@ -27,7 +27,7 @@ public class QDCA10ProLineItem {
     }
 
     @ManyToOne
-    @JoinColumn(name = "store_server_sales_id")  // 所有側でマッピング
+    @JoinColumn(name = "store_server_sales_id")
     private StoreServerSales storeServerSales;
 
     public void setItem(Item item) {

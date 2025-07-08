@@ -4,8 +4,8 @@ import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkusdroneshop.homeoffice.domain.Item;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.LineItemRecord;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
-import io.quarkusdroneshop.homeoffice.infrastructure.domain.QDCA10LineItem;
-import io.quarkusdroneshop.homeoffice.infrastructure.domain.QDCA10ProLineItem;
+import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10LineItem;
+import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10ProLineItem;
 
 
 import javax.persistence.*;
@@ -21,10 +21,10 @@ public class StoreServerSales extends PanacheEntity {
     public String server;
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<QDCA10LineItem> Qdca10LineItems = new ArrayList<>();
+    public List<Qdca10LineItem> Qdca10LineItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
-    public List<QDCA10ProLineItem> Qdca10proLineItems = new ArrayList<>();
+    public List<Qdca10ProLineItem> Qdca10proLineItems = new ArrayList<>();
 
     @OneToMany(mappedBy = "storeServerSales", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<ItemSales> itemSales = new ArrayList<>();
@@ -51,16 +51,16 @@ public class StoreServerSales extends PanacheEntity {
         storeServerSales.persist();
     }
 
-    public static QDCA10LineItem toQDCA10LineItem(LineItemRecord lineItemRecord) {
-        QDCA10LineItem item = new QDCA10LineItem();
+    public static Qdca10LineItem toQDCA10LineItem(LineItemRecord lineItemRecord) {
+        Qdca10LineItem item = new Qdca10LineItem();
         item.setItem(lineItemRecord.getItem());
         item.setName(lineItemRecord.getName());
         item.setPrice(lineItemRecord.getPrice());
         return item;
     }
 
-    public static QDCA10ProLineItem toQDCA10ProLineItem(LineItemRecord lineItemRecord) {
-        QDCA10ProLineItem item = new QDCA10ProLineItem();
+    public static Qdca10ProLineItem toQDCA10ProLineItem(LineItemRecord lineItemRecord) {
+        Qdca10ProLineItem item = new Qdca10ProLineItem();
         item.setItem(lineItemRecord.getItem());
         item.setName(lineItemRecord.getName());
         item.setPrice(lineItemRecord.getPrice());
