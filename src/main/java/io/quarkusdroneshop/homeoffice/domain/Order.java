@@ -232,12 +232,6 @@ public class Order extends PanacheEntityBase {
             Parameters.with("startDate", startDate)
                       .and("endDate", endDate)
         ).list();
-        
-        // return find("orderPlacedTimestamp BETWEEN :startDate AND :endDate AND createdTimestamp >= :createdTimestamp",
-        //         Parameters.with("startDate", startDate)
-        //                 .and("endDate", endDate)
-        //                 .and("createdTimestamp", createdTimestamp)
-        // ).list();
     }
 
     public static List<Order> findBetweenForLocation(Store location, Instant startDate, Instant endDate) {

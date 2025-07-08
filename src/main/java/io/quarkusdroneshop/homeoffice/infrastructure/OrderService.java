@@ -128,7 +128,6 @@ public class OrderService {
         if (orderRecord.getQdca10LineItems() != null) {
             for (LineItemRecord record : orderRecord.getQdca10LineItems()) {
                 Item item = record.getItem();
-                //BigDecimal price = BigDecimal.valueOf(3.00); // QDCA10用価格
                 BigDecimal price = BigDecimal.valueOf(record.getPrice());
                 itemCounts.merge(item, 1L, Long::sum);
                 itemRevenue.merge(item, price, BigDecimal::add);
@@ -138,7 +137,6 @@ public class OrderService {
         if (orderRecord.getQdca10proLineItems() != null) {
             for (LineItemRecord record : orderRecord.getQdca10proLineItems()) {
                 Item item = record.getItem();
-                //BigDecimal price = BigDecimal.valueOf(3.50); // QDCA10Pro用価格
                 BigDecimal price = BigDecimal.valueOf(record.getPrice());
                 itemCounts.merge(item, 1L, Long::sum);
                 itemRevenue.merge(item, price, BigDecimal::add);
@@ -155,7 +153,6 @@ public class OrderService {
             sales.setSalesTotal(salesTotal);
             salesList.add(sales);
         }
-        
         return salesList;
 
     }

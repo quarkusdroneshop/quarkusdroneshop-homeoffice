@@ -65,4 +65,13 @@ public class ItemSales extends PanacheEntity {
     public void setRevenue(double revenue) {
         this.revenue = revenue;
     }
+
+    public StoreServerSales getStoreServerSales() {
+        return this.storeServerSales;
+    }
+
+    public void setStoreServerSales(StoreServerSales storeServerSales) {
+        this.storeServerSales = storeServerSales;
+    }
+
 }

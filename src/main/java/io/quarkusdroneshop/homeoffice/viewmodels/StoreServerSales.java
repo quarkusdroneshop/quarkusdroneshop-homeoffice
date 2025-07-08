@@ -37,16 +37,17 @@ public class StoreServerSales extends PanacheEntity {
             for (LineItemRecord lineItem : orderRecord.getQdca10LineItems()) {
                 storeServerSales.Qdca10LineItems.add(toQdca10LineItem(lineItem));
                 storeServerSales.server = "qdca10";
-                storeServerSales.itemSales.add(toItemSales(lineItem));
+                storeServerSales.itemSales.add(toItemSales(lineItem,storeServerSales));
             }
         }
         if (orderRecord.getQdca10proLineItems() != null) {
             for (LineItemRecord lineItem : orderRecord.getQdca10proLineItems()) {
                 storeServerSales.Qdca10proLineItems.add(toQdca10proLineItem(lineItem));
                 storeServerSales.server = "qdca10pro";
-                storeServerSales.itemSales.add(toItemSales(lineItem));
+                storeServerSales.itemSales.add(toItemSales(lineItem,storeServerSales));
             }
         }
+
         storeServerSales.persist();
     }
 
@@ -66,13 +67,14 @@ public class StoreServerSales extends PanacheEntity {
         return item;
     }
 
-    public static ItemSales toItemSales(LineItemRecord lineItemRecord) {
+    public static ItemSales toItemSales(LineItemRecord lineItemRecord, StoreServerSales storeServerSales) {
         ItemSales item = new ItemSales();
         item.setItem(lineItemRecord.getItem());
         item.setPrice(lineItemRecord.getPrice());
         item.setSalesTotal(1);
         item.setRevenue(lineItemRecord.getPrice());
-        Instant.now();
+        item.setStoreServerSales(storeServerSales);
+        item.date = Instant.now();
         return item;
     }
 }

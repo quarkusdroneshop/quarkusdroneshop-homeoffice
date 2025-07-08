@@ -88,10 +88,6 @@ public class OrderRecord {
         return timestamp;
     }
 
-    // public String getOrderId() {
-    //     return externalOrderId != null ? externalOrderId : externalOrderId;
-    // }
-
     public String setderId() {
         return externalOrderId;
     }
