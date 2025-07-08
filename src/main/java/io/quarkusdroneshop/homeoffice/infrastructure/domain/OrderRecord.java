@@ -3,12 +3,13 @@ package io.quarkusdroneshop.homeoffice.infrastructure.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.Instant;
 import java.util.List;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.quarkusdroneshop.homeoffice.domain.OrderSource;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.LineItemRecord;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
-
+@RegisterForReflection
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderRecord {
 
