@@ -47,5 +47,13 @@ public class Qdca10proLineItem {
     public void setPrice(Double price) {
         this.price = price;
     }
+
+    public StoreServerSales getStoreServerSales() {
+        return storeServerSales;
+    }
+
+    public void setStoreServerSales(StoreServerSales storeServerSales) {
+        this.storeServerSales = storeServerSales;
+    }
     
 }
