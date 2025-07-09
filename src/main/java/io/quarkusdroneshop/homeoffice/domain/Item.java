@@ -6,8 +6,6 @@ import java.math.BigDecimal;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-@Enumerated(EnumType.STRING)
-@Column(nullable = false)
 public enum Item {
 
     QDC_A101(135.50), QDC_A102(155.50), QDC_A103(144.00),QDC_A104_AC(256.25), QDC_A104_AT(4.75),
