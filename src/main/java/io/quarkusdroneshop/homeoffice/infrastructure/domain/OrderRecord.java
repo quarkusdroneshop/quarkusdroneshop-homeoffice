@@ -14,10 +14,10 @@ import java.util.Objects;
 public class OrderRecord {
 
     
-    @JsonProperty("Qdca10LineItems")
+    @JsonProperty("qdca10LineItems")
     private List<LineItemRecord> qdca10LineItems;
     
-    @JsonProperty("Qdca10proLineItems")
+    @JsonProperty("qdca10proLineItems")
     private List<LineItemRecord> qdca10proLineItems;
     
     @JsonProperty("price")
