@@ -13,7 +13,6 @@ import java.util.Objects;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OrderRecord {
 
-    
     @JsonProperty("qdca10LineItems")
     private List<LineItemRecord> qdca10LineItems;
     
