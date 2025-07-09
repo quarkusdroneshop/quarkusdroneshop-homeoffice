@@ -9,11 +9,14 @@ import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10proLineItem;
 
 
 import javax.persistence.*;
+import javax.transaction.Transactional;
+
 import java.util.List;
 import java.time.Instant;
 import java.util.ArrayList;
 
 @Entity
+@Transactional
 @Table(name = "StoreServerSales")
 public class StoreServerSales extends PanacheEntity {
 
