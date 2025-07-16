@@ -10,7 +10,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name="ProductItemSales")
+@Table(name="productitemsales")
 public class ProductItemSales extends PanacheEntity {
 
     public String name;

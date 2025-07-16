@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Entity
-@Table(name="AverageOrderUpTime")
+@Table(name="averageorderuptime")
 public class AverageOrderUpTime extends PanacheEntity {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(AverageOrderUpTime.class);

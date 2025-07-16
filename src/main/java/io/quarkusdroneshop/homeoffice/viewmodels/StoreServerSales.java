@@ -17,7 +17,7 @@ import java.util.ArrayList;
 
 @Entity
 @Transactional
-@Table(name = "StoreServerSales")
+@Table(name = "storeserversales")
 public class StoreServerSales extends PanacheEntity {
 
     public String store;

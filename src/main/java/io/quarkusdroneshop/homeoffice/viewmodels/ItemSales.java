@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.Date;
 
 @Entity
-@Table(name="ItemSales")
+@Table(name="itemsales")
 public class ItemSales extends PanacheEntity {
 
     @ManyToOne

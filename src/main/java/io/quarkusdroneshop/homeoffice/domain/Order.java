@@ -17,7 +17,7 @@ import java.time.LocalDate;
 import java.util.*;
 
 @Entity 
-@Table(name="Orders") 
+@Table(name="orders") 
 @RegisterForReflection
 public class Order extends PanacheEntityBase {
 

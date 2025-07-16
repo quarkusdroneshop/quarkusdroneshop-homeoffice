@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name="ProductSales")
+@Table(name="productsales")
 public class ProductSales extends PanacheEntity {
 
     @Enumerated(EnumType.STRING)

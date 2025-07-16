@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name="LineItems")
+@Table(name="lineItems")
 public class LineItem extends PanacheEntity {
 
     @ManyToOne(optional = false)
