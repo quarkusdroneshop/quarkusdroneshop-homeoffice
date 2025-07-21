@@ -1,0 +1,13 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: quarkusdroneshop-homeoffice
+  description: バックヤード業務のマイクロサービスです
+  labels:
+    app: homeoffice
+  annotations:
+    github.com/project-slug: quarkusdroneshop/homeoffice
+spec:
+  type: website
+  owner: user:default/nmushino
+  lifecycle: production
