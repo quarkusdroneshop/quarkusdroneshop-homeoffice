@@ -378,6 +378,7 @@ public class OrdersResource {
     @Query
     public int getAverageOrderUpTime(String startDate, String endDate) {
     
+        logger.info("★★★ ENTER getAverageOrderUpTime ★★★");
         logger.info("getAverageOrderUpTime start=%s end=%s", startDate, endDate);
     
         Instant now = Instant.now();
