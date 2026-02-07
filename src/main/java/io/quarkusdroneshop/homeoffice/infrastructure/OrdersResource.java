@@ -380,8 +380,7 @@ public class OrdersResource {
         Instant now = Instant.now();
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
-        AverageOrderUpTime averageOrderUpTime = AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
-
+        AverageOrderUpTime averageOrderUpTime = AverageOrderUpTime.find("order by id desc").firstResult();
         List<Order> orders = new ArrayList<Order>();
         if (averageOrderUpTime != null){
             orders = Order.findBetweenAfter(start, end, averageOrderUpTime.calculatedAt);
@@ -399,28 +398,22 @@ public class OrdersResource {
             return 0;
         }else{
             //logger.debug("totalTime: " + totalTime + " orders.size():" + orders.size());
-            if (averageOrderUpTime == null) {
-                int averageTime = (int) (totalTime / orders.size());
+            if (averageOrderUpTime == null){
+                int averageTime = (int)(totalTime / orders.size());
                 averageOrderUpTime = new AverageOrderUpTime();
-                averageOrderUpTime.averageTime = Math.min(300, averageTime);
-                averageOrderUpTime.orderCount = orders.size();
+                averageOrderUpTime.averageTime = averageTime;
+                averageOrderUpTime.orderCount = (int) orders.stream().count();
                 averageOrderUpTime.calculatedAt = now;
                 averageOrderUpTime.persist();
-            } else {
-                int oldTotalTime =
-                    averageOrderUpTime.averageTime * averageOrderUpTime.orderCount;
-            
-                int newCount = averageOrderUpTime.orderCount + orders.size();
-            
-                averageOrderUpTime.averageTime = Math.min(
-                    300,
-                    (int) ((totalTime + oldTotalTime) / newCount)
-                );
-                averageOrderUpTime.orderCount = newCount;
+            }else{
+                int oldTotalTime = averageOrderUpTime.averageTime * averageOrderUpTime.orderCount;
+                averageOrderUpTime.averageTime = (int)((totalTime + oldTotalTime) / (averageOrderUpTime.orderCount + orders.size()));
+                averageOrderUpTime.orderCount = averageOrderUpTime.orderCount + (int) orders.stream().count();
                 averageOrderUpTime.calculatedAt = now;
                 averageOrderUpTime.persist();
-        }        
-            //Instant functionEnd = Instant.now();
+            }
+            Instant functionEnd = Instant.now();
+            System.out.println("getAverageOrderUpTime: " + Duration.between(now, functionEnd));
             return averageOrderUpTime.averageTime;
         }
     }
