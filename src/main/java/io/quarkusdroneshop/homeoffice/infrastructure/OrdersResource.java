@@ -399,19 +399,24 @@ public class OrdersResource {
             return 0;
         }else{
             //logger.debug("totalTime: " + totalTime + " orders.size():" + orders.size());
-            if (averageOrderUpTime == null){
-                int averageTime = (int)(totalTime / orders.size());
+            if (averageOrderUpTime == null) {
+                int averageTime = (int) (totalTime / orders.size());
                 averageOrderUpTime = new AverageOrderUpTime();
                 averageOrderUpTime.averageTime = Math.min(300, averageTime);
-                //averageOrderUpTime.orderCount = (int) orders.stream().count();
+                averageOrderUpTime.orderCount = orders.size();
                 averageOrderUpTime.calculatedAt = now;
                 averageOrderUpTime.persist();
-            }else{
-                int oldTotalTime = averageOrderUpTime.averageTime * averageOrderUpTime.orderCount;
-                averageOrderUpTime.averageTime = Math.min(300,
-                    (int) ((totalTime + oldTotalTime) / (averageOrderUpTime.orderCount + orders.size()))
+            } else {
+                int oldTotalTime =
+                    averageOrderUpTime.averageTime * averageOrderUpTime.orderCount;
+            
+                int newCount = averageOrderUpTime.orderCount + orders.size();
+            
+                averageOrderUpTime.averageTime = Math.min(
+                    300,
+                    (int) ((totalTime + oldTotalTime) / newCount)
                 );
-                //averageOrderUpTime.orderCount = averageOrderUpTime.orderCount + (int) orders.stream().count();
+                averageOrderUpTime.orderCount = newCount;
                 averageOrderUpTime.calculatedAt = now;
                 averageOrderUpTime.persist();
         }        
