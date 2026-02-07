@@ -420,7 +420,8 @@ public class OrdersResource {
             return 0;
         }
     
-        int averageSeconds =(int) Math.ceil((double) totalMillis / validOrderCount / 1000.0);
+        int averageSeconds =
+            (int) Math.ceil((double) totalMillis / validOrderCount / 1000.0);
     
         // 上限ガード（UI・グラフ用）
         averageSeconds = Math.min(300, averageSeconds);
