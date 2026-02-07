@@ -375,117 +375,126 @@ public class OrdersResource {
     }
 
     @Transactional
-@Query
-public int getAverageOrderUpTime(String startDate, String endDate) {
-
-    logger.info("getAverageOrderUpTime start=%s end=%s", startDate, endDate);
-
-    Instant now = Instant.now();
-    Instant start = Instant.parse(startDate + "T00:00:00Z");
-    Instant end = Instant.parse(endDate + "T00:00:00Z")
-                         .plus(1, ChronoUnit.DAYS);
-
-    AverageOrderUpTime averageOrderUpTime =
-        AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
-
-        logger.info("latest AverageOrderUpTime = %s",
-        averageOrderUpTime == null ? "null" :
-        "avg=" + averageOrderUpTime.averageTime +
-        ", count=" + averageOrderUpTime.orderCount +
-        ", at=" + averageOrderUpTime.calculatedAt
-    );
-
-    List<Order> orders;
-    if (averageOrderUpTime != null) {
-        orders = Order.findBetweenAfter(start, end, averageOrderUpTime.calculatedAt);
-    } else {
-        orders = Order.findBetween(start, end);
-    }
-
-    logger.info("orders size = %d", orders.size());
-
-    long totalMillis = 0;
-    int validOrderCount = 0;
-
-    for (Order order : orders) {
-
-        if (order.getOrderCompletedTimestamp() == null ||
-            order.getOrderPlacedTimestamp() == null) {
-
-                logger.debugf("skip order id=%s because timestamp is null", order.id);
-            continue;
-        }
-
-        Duration duration = Duration.between(
-            order.getOrderPlacedTimestamp(),
-            order.getOrderCompletedTimestamp()
-        );
-
-        long millis = duration.toMillis();
-
-        logger.debug(
-            "order placed=%s completed=%s duration(ms)=%d",
-            order.getOrderPlacedTimestamp(),
-            order.getOrderCompletedTimestamp(),
-            millis
-        );
-
-        if (millis <= 0) {
-            logger.warn("skip order id=%s because millis <= 0", order.id);
-            continue;
-        }
-
-        totalMillis += millis;
-        validOrderCount++;
-    }
-
-    logger.info("validOrderCount=%d totalMillis=%d",
-        validOrderCount, totalMillis);
-
-    if (validOrderCount == 0 || totalMillis <= 0) {
-        logger.warn("No valid orders -> return 0");
-        return 0;
-    }
-
-    int averageSeconds = (int) (totalMillis / validOrderCount / 1000);
-
-    logger.info("calculated averageSeconds(before cap)=%d", averageSeconds);
-
-    averageSeconds = Math.min(300, averageSeconds);
-
-    logger.info("averageSeconds(after cap)=%d", averageSeconds);
-
-    if (averageOrderUpTime == null) {
-        averageOrderUpTime = new AverageOrderUpTime();
-        averageOrderUpTime.averageTime = averageSeconds;
-        averageOrderUpTime.orderCount = validOrderCount;
-        averageOrderUpTime.calculatedAt = now;
-        averageOrderUpTime.persist();
-
-        logger.info("AverageOrderUpTime created");
-    } else {
-        int oldTotalSeconds =
-            averageOrderUpTime.averageTime * averageOrderUpTime.orderCount;
-
-        int newCount = averageOrderUpTime.orderCount + validOrderCount;
-
-        int newAverage =
-            (oldTotalSeconds + averageSeconds * validOrderCount) / newCount;
-
-        averageOrderUpTime.averageTime = Math.min(300, newAverage);
-        averageOrderUpTime.orderCount = newCount;
-        averageOrderUpTime.calculatedAt = now;
-        averageOrderUpTime.persist();
-
+    @Query
+    public int getAverageOrderUpTime(String startDate, String endDate) {
+    
+        logger.info("getAverageOrderUpTime start=%s end=%s", startDate, endDate);
+    
+        Instant now = Instant.now();
+        Instant start = Instant.parse(startDate + "T00:00:00Z");
+        Instant end = Instant.parse(endDate + "T00:00:00Z")
+                             .plus(1, ChronoUnit.DAYS);
+    
+        AverageOrderUpTime averageOrderUpTime =
+            AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
+    
         logger.info(
-            "AverageOrderUpTime updated avg=%d count=%d",
-            averageOrderUpTime.averageTime,
-            averageOrderUpTime.orderCount
+            "latest AverageOrderUpTime = %s",
+            averageOrderUpTime == null ? "null"
+                : "avg(ms)=" + averageOrderUpTime.averageTime
+                + ", count=" + averageOrderUpTime.orderCount
+                + ", at=" + averageOrderUpTime.calculatedAt
         );
+    
+        List<Order> orders;
+        if (averageOrderUpTime != null) {
+            orders = Order.findBetweenAfter(start, end, averageOrderUpTime.calculatedAt);
+        } else {
+            orders = Order.findBetween(start, end);
+        }
+    
+        logger.info("orders size = %d", orders.size());
+    
+        long totalMillis = 0;
+        int validOrderCount = 0;
+    
+        for (Order order : orders) {
+    
+            if (order.getOrderPlacedTimestamp() == null ||
+                order.getOrderCompletedTimestamp() == null) {
+                logger.debug("skip order id=%s because timestamp is null", order.id);
+                continue;
+            }
+    
+            Duration duration = Duration.between(
+                order.getOrderPlacedTimestamp(),
+                order.getOrderCompletedTimestamp()
+            );
+    
+            long millis = duration.toMillis();
+    
+            logger.debug(
+                "order id=%s placed=%s completed=%s duration(ms)=%d",
+                order.id,
+                order.getOrderPlacedTimestamp(),
+                order.getOrderCompletedTimestamp(),
+                millis
+            );
+    
+            if (millis <= 0) {
+                logger.warn("skip order id=%s because millis <= 0", order.id);
+                continue;
+            }
+    
+            totalMillis += millis;
+            validOrderCount++;
+        }
+    
+        logger.info(
+            "validOrderCount=%d totalMillis=%d",
+            validOrderCount,
+            totalMillis
+        );
+    
+        if (validOrderCount == 0 || totalMillis <= 0) {
+            logger.warn("No valid orders -> return 0");
+            return 0;
+        }
+    
+        // ★ 秒にしない（ミリ秒平均）
+        int averageMillis = (int) (totalMillis / validOrderCount);
+    
+        logger.info("calculated averageMillis(before cap)=%d", averageMillis);
+    
+        // ★ 上限ガード：300秒 = 300,000ms
+        averageMillis = Math.min(300_000, averageMillis);
+    
+        logger.info("averageMillis(after cap)=%d", averageMillis);
+    
+        if (averageOrderUpTime == null) {
+            averageOrderUpTime = new AverageOrderUpTime();
+            averageOrderUpTime.averageTime = averageMillis;
+            averageOrderUpTime.orderCount = validOrderCount;
+            averageOrderUpTime.calculatedAt = now;
+            averageOrderUpTime.persist();
+    
+            logger.info("AverageOrderUpTime created");
+        } else {
+            long oldTotalMillis =
+                (long) averageOrderUpTime.averageTime
+                * averageOrderUpTime.orderCount;
+    
+            int newCount = averageOrderUpTime.orderCount + validOrderCount;
+    
+            int newAverageMillis =
+                (int) ((oldTotalMillis + totalMillis) / newCount);
+    
+            averageOrderUpTime.averageTime =
+                Math.min(300_000, newAverageMillis);
+    
+            averageOrderUpTime.orderCount = newCount;
+            averageOrderUpTime.calculatedAt = now;
+            averageOrderUpTime.persist();
+    
+            logger.info(
+                "AverageOrderUpTime updated avg(ms)=%d count=%d",
+                averageOrderUpTime.averageTime,
+                averageOrderUpTime.orderCount
+            );
+        }
+    
+        return averageOrderUpTime.averageTime;
     }
-
-    return averageOrderUpTime.averageTime;
-}
 
     public static List<Instant> getDatesBetween(Instant startDate, Instant endDate) {
         long numOfDaysBetween = ChronoUnit.DAYS.between(startDate, endDate);
