@@ -376,46 +376,78 @@ public class OrdersResource {
 
     @Transactional
     @Query
-    public int getAverageOrderUpTime(String startDate, String endDate){
+    public int getAverageOrderUpTime(String startDate, String endDate) {
+    
         Instant now = Instant.now();
         Instant start = Instant.parse(startDate + "T00:00:00Z");
-        Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
-        AverageOrderUpTime averageOrderUpTime = AverageOrderUpTime.find("order by id desc").firstResult();
-        List<Order> orders = new ArrayList<Order>();
-        if (averageOrderUpTime != null){
+        Instant end = Instant.parse(endDate + "T00:00:00Z")
+                             .plus(1, ChronoUnit.DAYS);
+    
+        AverageOrderUpTime averageOrderUpTime =
+            AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
+    
+        List<Order> orders;
+        if (averageOrderUpTime != null) {
             orders = Order.findBetweenAfter(start, end, averageOrderUpTime.calculatedAt);
-        }else{
+        } else {
             orders = Order.findBetween(start, end);
         }
-
-        long totalTime = 0;
-        for( Order order : orders){
-            Duration orderDuration = Duration.between(order.getOrderPlacedTimestamp(), order.getOrderCompletedTimestamp());
-            totalTime += orderDuration.getSeconds();
-        }
-
-        if (orders.size() == 0 || totalTime == 0){
-            return 0;
-        }else{
-            //logger.debug("totalTime: " + totalTime + " orders.size():" + orders.size());
-            if (averageOrderUpTime == null){
-                int averageTime = (int)(totalTime / orders.size());
-                averageOrderUpTime = new AverageOrderUpTime();
-                averageOrderUpTime.averageTime = averageTime;
-                averageOrderUpTime.orderCount = (int) orders.stream().count();
-                averageOrderUpTime.calculatedAt = now;
-                averageOrderUpTime.persist();
-            }else{
-                int oldTotalTime = averageOrderUpTime.averageTime * averageOrderUpTime.orderCount;
-                averageOrderUpTime.averageTime = (int)((totalTime + oldTotalTime) / (averageOrderUpTime.orderCount + orders.size()));
-                averageOrderUpTime.orderCount = averageOrderUpTime.orderCount + (int) orders.stream().count();
-                averageOrderUpTime.calculatedAt = now;
-                averageOrderUpTime.persist();
+    
+        long totalMillis = 0;
+        int validOrderCount = 0;
+    
+        for (Order order : orders) {
+            if (order.getOrderCompletedTimestamp() == null ||
+                order.getOrderPlacedTimestamp() == null) {
+                continue;
             }
-            Instant functionEnd = Instant.now();
-            System.out.println("getAverageOrderUpTime: " + Duration.between(now, functionEnd));
-            return averageOrderUpTime.averageTime;
+    
+            Duration duration = Duration.between(
+                order.getOrderPlacedTimestamp(),
+                order.getOrderCompletedTimestamp()
+            );
+    
+            long millis = duration.toMillis();
+            if (millis <= 0) {
+                continue;
+            }
+    
+            totalMillis += millis;
+            validOrderCount++;
         }
+    
+        if (validOrderCount == 0 || totalMillis <= 0) {
+            return 0;
+        }
+    
+        int averageSeconds = (int) (totalMillis / validOrderCount / 1000);
+    
+        // 上限ガード（UI・グラフ用）
+        averageSeconds = Math.min(300, averageSeconds);
+    
+        if (averageOrderUpTime == null) {
+            averageOrderUpTime = new AverageOrderUpTime();
+            averageOrderUpTime.averageTime = averageSeconds;
+            averageOrderUpTime.orderCount = validOrderCount;
+            averageOrderUpTime.calculatedAt = now;
+            averageOrderUpTime.persist();
+        } else {
+            int oldTotalSeconds =
+                averageOrderUpTime.averageTime * averageOrderUpTime.orderCount;
+    
+            int newCount = averageOrderUpTime.orderCount + validOrderCount;
+    
+            averageOrderUpTime.averageTime = Math.min(
+                300,
+                (oldTotalSeconds + averageSeconds * validOrderCount) / newCount
+            );
+    
+            averageOrderUpTime.orderCount = newCount;
+            averageOrderUpTime.calculatedAt = now;
+            averageOrderUpTime.persist();
+        }
+    
+        return averageOrderUpTime.averageTime;
     }
 
     public static List<Instant> getDatesBetween(Instant startDate, Instant endDate) {
