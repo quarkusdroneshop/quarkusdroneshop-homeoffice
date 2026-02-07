@@ -375,7 +375,7 @@ public class OrdersResource {
     }
 
     @Transactional
-    @Query
+    //@Query
     public int getAverageOrderUpTime(String startDate, String endDate) {
     
         logger.info("★★★ ENTER getAverageOrderUpTime ★★★");
