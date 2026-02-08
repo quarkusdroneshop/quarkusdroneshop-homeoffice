@@ -326,6 +326,8 @@ public class OrdersResource {
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
         List<StoreServerSales> storeServerSalesList = new ArrayList<>();
 
+        logger.info("CALLED2");
+
         for (Store location : Store.values()) {
             Map<String, Map<Item, ItemSales>> servers = new HashMap<>();
 
