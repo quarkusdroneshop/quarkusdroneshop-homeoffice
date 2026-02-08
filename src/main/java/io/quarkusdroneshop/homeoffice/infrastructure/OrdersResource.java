@@ -6,6 +6,7 @@ import io.quarkusdroneshop.homeoffice.viewmodels.*;
 import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.graphql.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -371,7 +372,10 @@ public class OrdersResource {
 
     @Query("averageOrderUpTime")
     @Transactional
-    public int averageOrderUpTime(String startDate, String endDate) {
+    public int averageOrderUpTime(
+        @Name("endDate") String endDate,
+        @Name("startDate") String startDate
+    ) {
         logger.info("CALLED");
         return 1000;
     }
