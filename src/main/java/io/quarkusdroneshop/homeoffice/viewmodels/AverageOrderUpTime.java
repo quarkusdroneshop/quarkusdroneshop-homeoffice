@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkusdroneshop.homeoffice.HomeOfficeInitializer;
 import io.quarkusdroneshop.homeoffice.domain.Order;
+import org.eclipse.microprofile.graphql.Ignore;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
@@ -17,6 +18,7 @@ import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Ignore
 @Entity
 @Table(name="averageorderuptime")
 public class AverageOrderUpTime extends PanacheEntity {
@@ -41,13 +43,13 @@ public class AverageOrderUpTime extends PanacheEntity {
 
         if (current == null) {
             current = new AverageOrderUpTime();
-            current.averageTime = Math.min(300, (int) newUpTimeSeconds);
+            //current.averageTime = Math.min(300, (int) newUpTimeSeconds);
             current.orderCount = 1;
         } else {
             int totalTime = current.averageTime * current.orderCount;
             totalTime += newUpTimeSeconds;
             current.orderCount += 1;
-            current.averageTime = Math.min(300, totalTime / current.orderCount);
+            //current.averageTime = Math.min(300, totalTime / current.orderCount);
         }
         current.calculatedAt = Instant.now();
         current.persist();
