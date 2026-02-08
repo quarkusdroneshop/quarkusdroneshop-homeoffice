@@ -316,7 +316,7 @@ public class OrdersResource {
         storeServerSalesByDate(startDate: "2025-01-01", endDate: "2025-12-31") {
             server
             store
-            sales {
+            sales{
             item
             salesTotal
             revenue
@@ -412,8 +412,8 @@ public class OrdersResource {
             }
 
             long millis = Duration.between(
-                order.getOrderPlacedTimestamp(),
-                order.getOrderCompletedTimestamp()
+                order.getOrderCompletedTimestamp(),
+                order.getOrderPlacedTimestamp()
             ).toMillis();
 
             if (millis <= 0) {
@@ -455,10 +455,14 @@ public class OrdersResource {
         return latest.averageTime; // ★ ミリ秒
     }
 
-    public static List<Instant> getDatesBetween(Instant startDate, Instant endDate) {
-        long numOfDaysBetween = ChronoUnit.DAYS.between(startDate, endDate);
-        return IntStream.range(0, (int) numOfDaysBetween)
-            .mapToObj(i -> startDate.plus(i, ChronoUnit.DAYS))
+    public static List<LocalDate> getDatesBetween( Instant start, Instant end, ZoneId zone) {
+        LocalDate startDate = start.atZone(zone).toLocalDate();
+        LocalDate endDate   = end.atZone(zone).toLocalDate();
+    
+        long days = ChronoUnit.DAYS.between(startDate, endDate);
+    
+        return IntStream.rangeClosed(0, (int) days)
+            .mapToObj(startDate::plusDays)
             .collect(Collectors.toList());
     }
 }
