@@ -52,10 +52,10 @@ public class OrderService {
             order.orderCompletedTimestamp = Instant.now();
             order.persist();
 
-            AverageOrderUpTime updated = AverageOrderUpTime.fromOrderRecord(order);
-            if (updated != null) {
-                updated.persist();
-            }
+            // AverageOrderUpTime updated = AverageOrderUpTime.fromOrderRecord(order);
+            // if (updated != null) {
+            //     updated.persist();
+            // }
 
          } else {
             order = convertOrderRecordToOrder(orderRecord);
