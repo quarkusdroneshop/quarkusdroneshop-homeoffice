@@ -380,7 +380,7 @@ public class OrdersResource {
         @Name("startDate") String startDate,
         @Name("endDate") String endDate
      ) {
-        return 1.234;
+        return 1000;
     }
     //     logger.info("### averageOrderUpTime resolver called ###");
         
