@@ -380,76 +380,63 @@ public class OrdersResource {
         @Name("startDate") String startDate,
         @Name("endDate") String endDate
     ) {
-
+    
         Instant now = Instant.now();
-        Instant start = Instant.parse(startDate + "T00:00:00Z");
-        Instant end = Instant.parse(endDate + "T00:00:00Z")
-                             .plus(1, ChronoUnit.DAYS);
-
-        AverageOrderUpTime latest =
-            AverageOrderUpTime.find("order by calculatedAt desc")
-                              .firstResult();
-
-        List<Order> orders =
-            latest != null
-                ? Order.findBetweenAfter(start, end, latest.calculatedAt)
-                : Order.findBetween(start, end);
-
+    
+        // JST に変換
+        ZonedDateTime startJst = LocalDate.parse(startDate)
+                                           .atStartOfDay(ZoneId.of("Asia/Tokyo"));
+        ZonedDateTime endJst = LocalDate.parse(endDate)
+                                         .plusDays(1)
+                                         .atStartOfDay(ZoneId.of("Asia/Tokyo"));
+    
+        logger.info("startJST=%s endJST=%s", startJst, endJst);
+    
+        // 最新レコードを無視して期間指定のみで取得
+        List<Order> orders = Order.findBetween(startJst.toInstant(), endJst.toInstant());
+        logger.info("orders size=%d", orders.size());
+    
         long totalMillis = 0;
         int validCount = 0;
-
+    
         for (Order order : orders) {
-            if (order.getOrderPlacedTimestamp() == null ||
-                order.getOrderCompletedTimestamp() == null) {
+            if (order.getOrderPlacedTimestamp() == null || order.getOrderCompletedTimestamp() == null)
                 continue;
-            }
-        
+    
+            // 正の値に変換
             long millis = Math.abs(Duration.between(
                 order.getOrderPlacedTimestamp(),
                 order.getOrderCompletedTimestamp()
             ).toMillis());
-        
+    
             totalMillis += millis;
             validCount++;
         }
-
+    
         if (validCount == 0) {
             logger.warn("No valid orders -> return 0");
             return 0;
         }
-
+    
         int avgMillis = (int) (totalMillis / validCount);
         avgMillis = Math.min(300_000, avgMillis); // 上限 300 秒
-
+    
+        // 最新レコード更新
+        AverageOrderUpTime latest = AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
         if (latest == null) {
             latest = new AverageOrderUpTime();
             latest.averageTime = avgMillis;
             latest.orderCount = validCount;
         } else {
-            long oldTotal =
-                (long) latest.averageTime * latest.orderCount;
-
+            long oldTotal = (long) latest.averageTime * latest.orderCount;
             int newCount = latest.orderCount + validCount;
-            latest.averageTime =
-                (int) Math.min(300_000,
-                    (oldTotal + totalMillis) / newCount);
+            latest.averageTime = (int) Math.min(300_000, (oldTotal + totalMillis) / newCount);
             latest.orderCount = newCount;
         }
-
+    
         latest.calculatedAt = now;
         latest.persist();
-
-        return latest.averageTime; // ★ ミリ秒
-    }
-
-    public static List<LocalDate> getDatesBetween( Instant start, Instant end, ZoneId zone) {
-        LocalDate startDate = start.atZone(zone).toLocalDate();
-        LocalDate endDate   = end.atZone(zone).toLocalDate();
     
-        long days = ChronoUnit.DAYS.between(startDate, endDate);
-    
-        return IntStream.rangeClosed(0, (int) days)
-            .mapToObj(startDate::plusDays)
-            .collect(Collectors.toList());
+        return latest.averageTime; // ms
     }
 }
