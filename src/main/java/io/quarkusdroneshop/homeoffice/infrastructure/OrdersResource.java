@@ -405,8 +405,9 @@ public class OrdersResource {
             Instant completed = order.getOrderCompletedTimestamp();
             if (placed == null || completed == null) continue;
         
+            // Duration が 0ms にならないように最低 1ms とする
             long millis = Duration.between(placed, completed).toMillis();
-            if (millis <= 0) continue;
+            if (millis <= 0) millis = 1;
         
             totalMillis += millis;
             validCount++;
