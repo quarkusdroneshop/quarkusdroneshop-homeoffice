@@ -369,9 +369,9 @@ public class OrdersResource {
         return storeServerSalesList;
     }
 
-    @Query("averageOrderUpTime")
+    @Query
     @Transactional
-    public int getAverageOrderUpTime(String startDate, String endDate) {
+    public int getAverageOrderUpTimeValue(String startDate, String endDate) {
         logger.info("CALLED");
         return 1000;
     }
@@ -441,4 +441,11 @@ public class OrdersResource {
     //     //return avgMillis; // 小数ミリ秒で返す
     //     return 1;
     // }
+
+    public static List<Instant> getDatesBetween(Instant startDate, Instant endDate) {
+        long numOfDaysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+        return IntStream.range(0, (int) numOfDaysBetween)
+            .mapToObj(i -> startDate.plus(i, ChronoUnit.DAYS))
+            .collect(Collectors.toList());
+    }
 }

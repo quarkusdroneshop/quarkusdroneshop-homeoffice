@@ -5,8 +5,6 @@ import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkusdroneshop.homeoffice.HomeOfficeInitializer;
 import io.quarkusdroneshop.homeoffice.domain.Order;
 
-import org.eclipse.microprofile.graphql.Ignore;
-
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.time.Instant;
@@ -19,7 +17,6 @@ import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Ignore
 @Entity
 @Table(name="averageorderuptime")
 public class AverageOrderUpTime extends PanacheEntity {
