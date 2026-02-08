@@ -374,14 +374,24 @@ public class OrdersResource {
         return storeServerSalesList;
     }
 
-    @Query
+    @Query("averageOrderUpTime")
     @Transactional
-    public int averageOrderUpTime(
+    public int averageOrderUpTimeResolver(
         @Name("startDate") String startDate,
         @Name("endDate") String endDate
     ) {
+        logger.info("### averageOrderUpTime resolver CALLED ###");
         return 1000;
     }
+
+    // @Query
+    // @Transactional
+    // public int averageOrderUpTime(
+    //     @Name("startDate") String startDate,
+    //     @Name("endDate") String endDate
+    // ) {
+    //     return 1000;
+    // }
     //     logger.info("### averageOrderUpTime resolver called ###");
         
     //     Instant now = Instant.now();
