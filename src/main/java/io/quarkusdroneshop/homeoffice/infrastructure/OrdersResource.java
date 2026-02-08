@@ -316,11 +316,6 @@ public class OrdersResource {
         storeServerSalesByDate(startDate: "2025-01-01", endDate: "2025-12-31") {
             server
             store
-            sales{
-            item
-            salesTotal
-            revenue
-            }
         }
     }
      */
