@@ -374,8 +374,8 @@ public class OrdersResource {
         return storeServerSalesList;
     }
 
-    @Query("averageOrderUpTime")
     @Transactional
+    @Query("averageOrderUpTime")
     public int averageOrderUpTimeResolver(
         @Name("startDate") String startDate,
         @Name("endDate") String endDate
