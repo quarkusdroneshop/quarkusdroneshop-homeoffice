@@ -409,7 +409,7 @@ public class OrdersResource {
             if (placed == null || completed == null) continue;
     
             // 正の値を確保
-            long millis = Math.abs(Duration.between(placed, completed).toMillis());
+            long millis = Math.abs(Duration.between(completed, placed).toMillis());
             totalMillis += millis;
             validCount++;
         }
