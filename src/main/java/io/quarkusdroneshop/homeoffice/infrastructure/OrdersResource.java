@@ -393,12 +393,9 @@ public class OrdersResource {
         ZonedDateTime endJst = LocalDate.parse(endDate).plusDays(1).atStartOfDay(ZoneId.of("Asia/Tokyo"));
         Instant endUtc = endJst.toInstant();
     
-        logger.infof("Query range: %s (UTC) ~ %s (UTC)", startUtc, endUtc);
-    
         // ----------------------------
         // 注文を取得
         List<Order> orders = Order.findBetween(startUtc, endUtc);
-        logger.infof("Orders found=%d", orders.size());
     
         long totalMillis = 0;
         int validCount = 0;
@@ -407,9 +404,10 @@ public class OrdersResource {
             Instant placed = order.getOrderPlacedTimestamp();
             Instant completed = order.getOrderCompletedTimestamp();
             if (placed == null || completed == null) continue;
-    
-            // 正の値を確保
-            long millis = Math.abs(Duration.between(completed, placed).toMillis());
+        
+            long millis = Duration.between(placed, completed).toMillis();
+            if (millis <= 0) continue;
+        
             totalMillis += millis;
             validCount++;
         }
