@@ -381,9 +381,6 @@ public class OrdersResource {
         @Name("endDate") String endDate
     ) {
 
-        logger.info("★★★ ENTER getAverageOrderUpTime ★★★");
-        logger.infof("start=%s end=%s", startDate, endDate);
-
         Instant now = Instant.now();
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z")
@@ -393,14 +390,10 @@ public class OrdersResource {
             AverageOrderUpTime.find("order by calculatedAt desc")
                               .firstResult();
 
-        logger.infof("latest=%s", latest);
-
         List<Order> orders =
             latest != null
                 ? Order.findBetweenAfter(start, end, latest.calculatedAt)
                 : Order.findBetween(start, end);
-
-        logger.infof("orders size=%d", orders.size());
 
         long totalMillis = 0;
         int validCount = 0;
@@ -410,16 +403,12 @@ public class OrdersResource {
                 order.getOrderCompletedTimestamp() == null) {
                 continue;
             }
-
-            long millis = Duration.between(
-                order.getOrderCompletedTimestamp(),
-                order.getOrderPlacedTimestamp()
-            ).toMillis();
-
-            if (millis <= 0) {
-                continue;
-            }
-
+        
+            long millis = Math.abs(Duration.between(
+                order.getOrderPlacedTimestamp(),
+                order.getOrderCompletedTimestamp()
+            ).toMillis());
+        
             totalMillis += millis;
             validCount++;
         }
@@ -431,8 +420,6 @@ public class OrdersResource {
 
         int avgMillis = (int) (totalMillis / validCount);
         avgMillis = Math.min(300_000, avgMillis); // 上限 300 秒
-
-        logger.infof("calculated avgMillis=%d", avgMillis);
 
         if (latest == null) {
             latest = new AverageOrderUpTime();
