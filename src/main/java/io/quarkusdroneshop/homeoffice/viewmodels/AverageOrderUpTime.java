@@ -54,12 +54,12 @@ public class AverageOrderUpTime extends PanacheEntity {
         return current;
     }
 
-    // public static AverageOrderUpTime fromOrder(Order order) {
-    //     if (order == null || order.orderCompletedTimestamp == null || order.orderPlacedTimestamp == null) {
-    //         return null;
-    //     }
-    //     Duration duration = Duration.between(order.orderPlacedTimestamp, order.orderCompletedTimestamp);
-    //     AverageOrderUpTime averageOrderUpTime = new AverageOrderUpTime();
-    //     return averageOrderUpTime;
-    // }
+    public static AverageOrderUpTime fromOrder(Order order) {
+        if (order == null || order.orderCompletedTimestamp == null || order.orderPlacedTimestamp == null) {
+            return null;
+        }
+        Duration duration = Duration.between(order.orderPlacedTimestamp, order.orderCompletedTimestamp);
+        AverageOrderUpTime averageOrderUpTime = new AverageOrderUpTime();
+        return averageOrderUpTime;
+    }
 }
