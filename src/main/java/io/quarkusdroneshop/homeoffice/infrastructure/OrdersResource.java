@@ -326,8 +326,6 @@ public class OrdersResource {
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
         List<StoreServerSales> storeServerSalesList = new ArrayList<>();
 
-        logger.info("CALLED2");
-
         for (Store location : Store.values()) {
             Map<String, Map<Item, ItemSales>> servers = new HashMap<>();
 
@@ -371,9 +369,9 @@ public class OrdersResource {
         return storeServerSalesList;
     }
 
-    @Query("averageOrderUpTime")
+    @Query("averageOrderUpTimeValue")
     @Transactional
-    public int getAverageOrderUpTime(String startDate, String endDate){
+    public int getAverageOrderUpTime(String startDate, String endDate) {
         logger.info("CALLED");
         return 1000;
     }
