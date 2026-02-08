@@ -397,6 +397,13 @@ public class OrdersResource {
         List<Order> orders = Order.findBetween(startLdt, endLdt);
         logger.info("orders size=%d", orders.size());
 
+        logger.info("Found orders count=%d", orders.size());
+        for (Order o : orders) {
+            logger.info("order placed=%s completed=%s", 
+                        o.getOrderPlacedTimestamp(), o.getOrderCompletedTimestamp());
+        }
+
+
         long totalMillis = 0;
         int validCount = 0;
 
