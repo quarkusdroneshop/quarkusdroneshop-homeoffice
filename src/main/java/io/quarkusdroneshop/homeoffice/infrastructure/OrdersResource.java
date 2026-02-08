@@ -377,7 +377,7 @@ public class OrdersResource {
 
     @Transactional
     @Query("averageOrderUpTime")
-    public int getAverageOrderUpTime(
+    public double getAverageOrderUpTime(
         @Name("startDate") String startDate,
         @Name("endDate") String endDate
     ) {
@@ -397,36 +397,38 @@ public class OrdersResource {
         // 注文を取得
         List<Order> orders = Order.findBetween(startUtc, endUtc);
     
-        long totalMillis = 0;
+        // ----------------------------
+        // ミリ秒の小数まで計算
+        double totalMillis = 0;
         int validCount = 0;
     
         for (Order order : orders) {
             Instant placed = order.getOrderPlacedTimestamp();
             Instant completed = order.getOrderCompletedTimestamp();
             if (placed == null || completed == null) continue;
-        
-            // Duration が 0ms にならないように最低 1ms とする
-            long millis = Duration.between(placed, completed).toMillis();
-            if (millis <= 0) millis = 1;
-        
+    
+            // Durationを小数ミリ秒で計算
+            double millis = Duration.between(placed, completed).toNanos() / 1_000_000.0;
+            millis = Math.max(1.0, millis); // 最低1ms保証
+    
             totalMillis += millis;
             validCount++;
         }
     
         if (validCount == 0) {
             logger.warn("No valid orders -> return 0");
-            return 0;
+            return 0.0;
         }
     
-        int avgMillis = (int) (totalMillis / validCount);
-        avgMillis = Math.min(300_000, avgMillis); // 上限 300 秒
+        double avgMillis = totalMillis / validCount;
+        avgMillis = Math.min(300_000.0, avgMillis); // 上限300秒
     
         // ----------------------------
-        // 最新レコード更新
+        // 最新レコード更新（double → int に丸める場合は persist用）
         AverageOrderUpTime latest = AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
         if (latest == null) {
             latest = new AverageOrderUpTime();
-            latest.averageTime = avgMillis;
+            latest.averageTime = (int) Math.round(avgMillis); // DB保存用は整数ミリ秒
             latest.orderCount = validCount;
         } else {
             long oldTotal = (long) latest.averageTime * latest.orderCount;
@@ -438,6 +440,6 @@ public class OrdersResource {
         latest.calculatedAt = now;
         latest.persist();
     
-        return latest.averageTime; // ms
+        return avgMillis; // 小数ミリ秒で返す
     }
 }
