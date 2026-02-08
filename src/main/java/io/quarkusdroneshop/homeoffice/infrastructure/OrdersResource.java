@@ -370,6 +370,16 @@ public class OrdersResource {
         return storeServerSalesList;
     }
 
+    @Query("averageOrder1")
+    @Transactional
+    public int averageOrder1(
+        @Name("endDate") String endDate,
+        @Name("startDate") String startDate
+    ) {
+        logger.info("CALLED");
+        return 1000;
+    }
+
     @Query("averageOrderUpTimeValue")
     @Transactional
     public int averageOrderUpTimeValue(
