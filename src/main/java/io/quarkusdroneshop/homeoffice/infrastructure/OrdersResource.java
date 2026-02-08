@@ -378,39 +378,38 @@ public class OrdersResource {
     @Transactional
     @Query("averageOrderUpTime")
     public int getAverageOrderUpTime(
-            @Name("startDate") String startDate,
-            @Name("endDate") String endDate
+        @Name("startDate") String startDate,
+        @Name("endDate") String endDate
     ) {
-    
         Instant now = Instant.now();
     
-        // JST に変換
-        ZonedDateTime startJst = LocalDate.parse(startDate)
-                                        .atStartOfDay(ZoneId.of("Asia/Tokyo"));
-        ZonedDateTime endJst = LocalDate.parse(endDate)
-                                      .plusDays(1)
-                                      .atStartOfDay(ZoneId.of("Asia/Tokyo"));
+        // ----------------------------
+        // JST の日付を UTC の Instant に変換
+        // startDate 0:00 JST → UTC
+        ZonedDateTime startJst = LocalDate.parse(startDate).atStartOfDay(ZoneId.of("Asia/Tokyo"));
+        Instant startUtc = startJst.toInstant();
     
-        logger.infof("startJST=%s endJST=%s", startJst, endJst);
+        // endDate 23:59:59.999 JST → UTC (翌日の0時にずらす)
+        ZonedDateTime endJst = LocalDate.parse(endDate).plusDays(1).atStartOfDay(ZoneId.of("Asia/Tokyo"));
+        Instant endUtc = endJst.toInstant();
     
-        // 最新レコードを無視して期間指定のみで取得
-        List<Order> orders = Order.findBetween(startJst.toInstant(), endJst.toInstant());
-        logger.infof("orders size=%d", orders.size());
+        logger.infof("Query range: %s (UTC) ~ %s (UTC)", startUtc, endUtc);
+    
+        // ----------------------------
+        // 注文を取得
+        List<Order> orders = Order.findBetween(startUtc, endUtc);
+        logger.infof("Orders found=%d", orders.size());
     
         long totalMillis = 0;
         int validCount = 0;
     
         for (Order order : orders) {
-            if (order.getOrderPlacedTimestamp() == null || order.getOrderCompletedTimestamp() == null)
-                continue;
+            Instant placed = order.getOrderPlacedTimestamp();
+            Instant completed = order.getOrderCompletedTimestamp();
+            if (placed == null || completed == null) continue;
     
-            // ミリ秒単位で差を計算（負は絶対値に）
-            long millis = Math.abs(Duration.between(
-                order.getOrderPlacedTimestamp(),
-                order.getOrderCompletedTimestamp()
-            ).toMillis());
-    
-            // 0ms でも加算する
+            // 正の値を確保
+            long millis = Math.abs(Duration.between(placed, completed).toMillis());
             totalMillis += millis;
             validCount++;
         }
@@ -420,15 +419,10 @@ public class OrdersResource {
             return 0;
         }
     
-        // 平均を計算
         int avgMillis = (int) (totalMillis / validCount);
+        avgMillis = Math.min(300_000, avgMillis); // 上限 300 秒
     
-        // Chart用に最低1ms、上限300秒
-        avgMillis = Math.max(1, avgMillis);
-        avgMillis = Math.min(300_000, avgMillis);
-    
-        logger.infof("calculated avgMillis=%d", avgMillis);
-    
+        // ----------------------------
         // 最新レコード更新
         AverageOrderUpTime latest = AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
         if (latest == null) {
@@ -445,6 +439,6 @@ public class OrdersResource {
         latest.calculatedAt = now;
         latest.persist();
     
-        return avgMillis; // ★ ミリ秒
+        return latest.averageTime; // ms
     }
 }
