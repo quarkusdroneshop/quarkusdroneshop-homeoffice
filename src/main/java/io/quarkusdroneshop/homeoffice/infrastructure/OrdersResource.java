@@ -382,62 +382,57 @@ public class OrdersResource {
         @Name("endDate") String endDate
     ) {
         Instant now = Instant.now();
-    
-        // ----------------------------
-        // JST の日付を UTC の Instant に変換
+
+        // JST → UTC に変換
         ZonedDateTime startJst = LocalDate.parse(startDate).atStartOfDay(ZoneId.of("Asia/Tokyo"));
         Instant startUtc = startJst.toInstant();
-    
+
         ZonedDateTime endJst = LocalDate.parse(endDate).plusDays(1).atStartOfDay(ZoneId.of("Asia/Tokyo"));
         Instant endUtc = endJst.toInstant();
-    
-        // ----------------------------
-        // 注文を取得
+
+        // 注文取得
         List<Order> orders = Order.findBetween(startUtc, endUtc);
-    
-        // ----------------------------
-        // 小数ミリ秒で平均を計算
+
         double totalMillis = 0.0;
         int validCount = 0;
-    
+
         for (Order order : orders) {
             Instant placed = order.getOrderPlacedTimestamp();
             Instant completed = order.getOrderCompletedTimestamp();
             if (placed == null || completed == null) continue;
-    
+
+            // Duration を小数ミリ秒で計算
             double millis = Duration.between(placed, completed).toNanos() / 1_000_000.0;
             millis = Math.max(1.0, millis); // 最低1ms保証
-    
+
             totalMillis += millis;
             validCount++;
         }
-    
+
         if (validCount == 0) {
             logger.warn("No valid orders -> return 0.0");
             return 0.0;
         }
-    
+
         double avgMillis = totalMillis / validCount;
         avgMillis = Math.min(300_000.0, avgMillis); // 上限300秒
-    
-        // ----------------------------
-        // 最新レコード更新（累積平均も double に変更）
+
+        // 最新レコード更新（DB保存は整数ミリ秒）
         AverageOrderUpTime latest = AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
         if (latest == null) {
             latest = new AverageOrderUpTime();
-            latest.averageTime = (int) Math.round(avgMillis); // DB保存用は整数ミリ秒
+            latest.averageTime = (int) Math.round(avgMillis);
             latest.orderCount = validCount;
         } else {
-            // 累積平均を double で計算
             double oldTotal = (double) latest.averageTime * latest.orderCount;
             int newCount = latest.orderCount + validCount;
             latest.averageTime = (int) Math.min(300_000.0, (oldTotal + totalMillis) / newCount);
             latest.orderCount = newCount;
         }
-    
+
         latest.calculatedAt = now;
         latest.persist();
-    
+
         return avgMillis; // 小数ミリ秒で返す
     }
 }
