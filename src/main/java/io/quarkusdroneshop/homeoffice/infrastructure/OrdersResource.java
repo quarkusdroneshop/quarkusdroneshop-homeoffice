@@ -376,7 +376,7 @@ public class OrdersResource {
 
     @Transactional
     @Query("averageOrderUpTime")
-    public int getAverageOrderUpTimeResolver(
+    public Integer getAverageOrderUpTimeResolver(
         @Name("startDate") String startDate,
         @Name("endDate") String endDate
     ) {
