@@ -317,6 +317,11 @@ public class OrdersResource {
         storeServerSalesByDate(startDate: "2025-01-01", endDate: "2025-12-31") {
             server
             store
+            itemSales {
+            item
+            salesTotal
+            revenue
+            }
         }
     }
      */
@@ -371,10 +376,9 @@ public class OrdersResource {
     }
 
     @Query("averageOrder1")
-    @Transactional
     public int averageOrder1(
-        @Name("endDate") String endDate,
-        @Name("startDate") String startDate
+        @Name("startDate") String startDate,
+        @Name("endDate") String endDate
     ) {
         logger.info("CALLED");
         return 1000;
@@ -387,7 +391,7 @@ public class OrdersResource {
         @Name("endDate") String endDate
     ) {
         logger.info("CALLED");
-        return 1000;
+        return 10;
     }
 
     // @Query
