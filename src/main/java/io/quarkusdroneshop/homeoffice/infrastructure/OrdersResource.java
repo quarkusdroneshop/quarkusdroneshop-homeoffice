@@ -3,10 +3,8 @@ package io.quarkusdroneshop.homeoffice.infrastructure;
 import io.quarkus.panache.common.Parameters;
 import io.quarkusdroneshop.homeoffice.domain.*;
 import io.quarkusdroneshop.homeoffice.viewmodels.*;
-import org.eclipse.microprofile.graphql.Description;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Query;
-import org.eclipse.microprofile.graphql.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +19,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-//@GraphQLApi
-@ApplicationScoped
+@GraphQLApi
+//@ApplicationScoped
 public class OrdersResource {
 
     Logger logger = LoggerFactory.getLogger(OrdersResource.class);
@@ -376,13 +374,11 @@ public class OrdersResource {
         return storeServerSalesList;
     }
 
+    @Transactional
     @Query
-    public int averageOrderUpTime(
-        @Name("endDate") String endDate,
-        @Name("startDate") String startDate
-    ) {
-        logger.info("CALLED averageOrderUpTime");
-        return 1000;
+    public int getAverageOrderUpTime(String startDate, String endDate){
+        logger.info("CALLED");
+        return 10;
     }
 
     // @Query
