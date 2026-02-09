@@ -47,7 +47,6 @@ public class OrdersResource {
     }
      */
     @Query
-    @Description("Get all orders from store by location")
     public List<Order> ordersForLocation(String location) {
         return Order.list("location", location);
     }
