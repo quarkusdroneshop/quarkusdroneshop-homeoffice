@@ -400,8 +400,7 @@ public class OrdersResource {
             if (placed == null || completed == null) continue;
 
             // Duration を小数ミリ秒で計算
-            double millis = (Duration.between(placed, completed).toNanos() / 1_000_000.0) * 1000000;
-            //millis = Math.max(1.0, millis); // 最低1ms保証
+            double millis = (Duration.between(placed, completed).toNanos() / 1_000_000.0) * 100000;
 
             totalMillis += millis;
             validCount++;
@@ -413,7 +412,7 @@ public class OrdersResource {
         }
 
         double avgMillis = totalMillis / validCount;
-        avgMillis = Math.min(300_000.0, avgMillis); // 上限300秒
+        avgMillis = Math.min(300_000.0, avgMillis);
 
         // 最新レコード更新（DB保存は整数ミリ秒）
         AverageOrderUpTime latest = AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
