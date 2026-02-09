@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.enterprise.context.ApplicationScoped;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
@@ -20,7 +21,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-@GraphQLApi
+//@GraphQLApi
+@ApplicationScoped
 public class OrdersResource {
 
     Logger logger = LoggerFactory.getLogger(OrdersResource.class);
@@ -374,11 +376,13 @@ public class OrdersResource {
         return storeServerSalesList;
     }
 
-    @Transactional
     @Query
-    public int getAverageOrderUpTime(String startDate, String endDate){
-        logger.info("CALLED");
-        return 10;
+    public int averageOrderUpTime(
+        @Name("endDate") String endDate,
+        @Name("startDate") String startDate
+    ) {
+        logger.info("CALLED averageOrderUpTime");
+        return 1000;
     }
 
     // @Query
