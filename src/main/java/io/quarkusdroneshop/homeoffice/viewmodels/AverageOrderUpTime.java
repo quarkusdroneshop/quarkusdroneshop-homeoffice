@@ -5,8 +5,6 @@ import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkusdroneshop.homeoffice.HomeOfficeInitializer;
 import io.quarkusdroneshop.homeoffice.domain.Order;
 
-import org.eclipse.microprofile.graphql.Ignore;
-
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.time.Instant;
