@@ -431,7 +431,10 @@ public class OrdersResource {
         latest.calculatedAt = now;
         latest.persist();
 
-        return (int)avgMillis; // 小数ミリ秒で返す
+        // ★ ここで秒に変換
+        double avgSeconds = avgMillis / 1000.0;
+
+        return (int)avgSeconds; // 小数ミリ秒で返す
     }
 
     public static List<Instant> getDatesBetween(Instant startDate, Instant endDate) {
