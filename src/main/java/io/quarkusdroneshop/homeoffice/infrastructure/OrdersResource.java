@@ -432,7 +432,7 @@ public class OrdersResource {
         latest.persist();
 
         // ★ ここで秒に変換
-        double avgSeconds = avgMillis / 1000.0;
+        double avgSeconds = avgMillis * 1000.0;
 
         return (int)avgSeconds; // 小数ミリ秒で返す
     }
