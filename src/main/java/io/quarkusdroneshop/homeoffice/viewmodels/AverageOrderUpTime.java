@@ -19,15 +19,15 @@ import org.slf4j.LoggerFactory;
 
 @Entity
 @Table(name="averageorderuptime")
-public class AverageOrderUpTime2 extends PanacheEntity {
+public class AverageOrderUpTime extends PanacheEntity {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(AverageOrderUpTime2.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AverageOrderUpTime.class);
 
     public int averageTime;
     public int orderCount;
     public Instant calculatedAt;
 
-    public static AverageOrderUpTime2 fromOrderRecord(Order order) {
+    public static AverageOrderUpTime fromOrderRecord(Order order) {
         Instant placed = order.getOrderPlacedTimestamp();
         Instant completed = order.getOrderCompletedTimestamp();
     
@@ -37,10 +37,10 @@ public class AverageOrderUpTime2 extends PanacheEntity {
         }
     
         long newUpTimeSeconds = Duration.between(placed, completed).getSeconds();
-        AverageOrderUpTime2 current = AverageOrderUpTime2.find("FROM AverageOrderUpTime ORDER BY calculatedAt DESC").firstResult();
+        AverageOrderUpTime current = AverageOrderUpTime.find("FROM AverageOrderUpTime ORDER BY calculatedAt DESC").firstResult();
 
         if (current == null) {
-            current = new AverageOrderUpTime2();
+            current = new AverageOrderUpTime();
             //current.averageTime = Math.min(300, (int) newUpTimeSeconds);
             current.orderCount = 1;
         } else {
@@ -54,12 +54,12 @@ public class AverageOrderUpTime2 extends PanacheEntity {
         return current;
     }
 
-    public static AverageOrderUpTime2 fromOrder(Order order) {
+    public static AverageOrderUpTime fromOrder(Order order) {
         if (order == null || order.orderCompletedTimestamp == null || order.orderPlacedTimestamp == null) {
             return null;
         }
         Duration duration = Duration.between(order.orderPlacedTimestamp, order.orderCompletedTimestamp);
-        AverageOrderUpTime2 averageOrderUpTime = new AverageOrderUpTime2();
+        AverageOrderUpTime averageOrderUpTime = new AverageOrderUpTime();
         return averageOrderUpTime;
     }
 }
