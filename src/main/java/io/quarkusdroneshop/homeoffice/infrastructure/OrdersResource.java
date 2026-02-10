@@ -400,7 +400,7 @@ public class OrdersResource {
             if (placed == null || completed == null) continue;
 
             // Duration を小数ミリ秒で計算
-            double millis = (Duration.between(placed, completed).toNanos() / 1_000_000.0) * 10000;
+            double millis = (Duration.between(placed, completed).toNanos() / 1_000_000.0);
 
             totalMillis += millis;
             validCount++;
