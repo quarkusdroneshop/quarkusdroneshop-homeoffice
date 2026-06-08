@@ -157,8 +157,11 @@ public class OrdersResource {
                 if (soldItems == 0) continue;
     
                 // 既存のレコードがある場合は更新、なければ作成
-                ProductItemSales itemSales = ProductItemSales.find("item = :item AND salesdate = :salesdate",
-                        Parameters.with("item", item).and("salesdate", day))
+                ProductItemSales itemSales =
+                    ProductItemSales.find(
+                        "item = :item AND saleDate = :saleDate",
+                        Parameters.with("item", item)
+                                .and("saleDate", day))
                     .firstResult();
     
                 if (itemSales != null) {
