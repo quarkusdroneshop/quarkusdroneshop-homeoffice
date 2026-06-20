@@ -8,10 +8,10 @@ import org.eclipse.microprofile.graphql.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.enterprise.context.ApplicationScoped;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.transaction.Transactional;
+import jakarta.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.*;
 import java.time.temporal.ChronoUnit;

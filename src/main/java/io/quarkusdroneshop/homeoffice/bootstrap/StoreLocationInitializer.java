@@ -1,9 +1,9 @@
 package io.quarkusdroneshop.homeoffice.bootstrap;
 
 import io.quarkus.runtime.StartupEvent;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.transaction.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.transaction.Transactional;
 import io.quarkusdroneshop.homeoffice.domain.Store;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.StoreLocation;
 

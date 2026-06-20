@@ -1,14 +1,14 @@
 package io.quarkusdroneshop.homeoffice.infrastructure.domain;
 
-import javax.persistence.GeneratedValue;
+import jakarta.persistence.GeneratedValue;
 import io.quarkusdroneshop.homeoffice.domain.Item;
 import io.quarkusdroneshop.homeoffice.viewmodels.StoreServerSales;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import java.math.BigDecimal;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import java.util.Objects;
 
 @Entity

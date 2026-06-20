@@ -2,8 +2,8 @@ package io.quarkusdroneshop.homeoffice.domain;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.*;
+import jakarta.json.bind.annotation.JsonbTransient;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;

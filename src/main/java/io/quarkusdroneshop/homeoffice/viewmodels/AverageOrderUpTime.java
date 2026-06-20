@@ -5,12 +5,12 @@ import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkusdroneshop.homeoffice.HomeOfficeInitializer;
 import io.quarkusdroneshop.homeoffice.domain.Order;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.time.Instant;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.Duration;
 

@@ -14,8 +14,8 @@ import io.quarkusdroneshop.homeoffice.viewmodels.AverageOrderUpTime;
 import io.quarkusdroneshop.homeoffice.viewmodels.ProductSales;
 import io.quarkusdroneshop.homeoffice.viewmodels.StoreServerSales;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.transaction.Transactional;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

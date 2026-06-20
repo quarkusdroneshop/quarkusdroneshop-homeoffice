@@ -5,8 +5,8 @@ import io.quarkusdroneshop.homeoffice.domain.Item;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkusdroneshop.homeoffice.domain.Order;
 
-import javax.validation.constraints.NotNull;
-import javax.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Date;

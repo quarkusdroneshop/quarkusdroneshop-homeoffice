@@ -4,7 +4,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.quarkusdroneshop.homeoffice.domain.Item;
 import io.quarkusdroneshop.homeoffice.domain.Order;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;

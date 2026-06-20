@@ -8,8 +8,8 @@ import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10LineItem;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10proLineItem;
 
 
-import javax.persistence.*;
-import javax.transaction.Transactional;
+import jakarta.persistence.*;
+import jakarta.transaction.Transactional;
 
 import java.util.List;
 import java.time.Instant;
