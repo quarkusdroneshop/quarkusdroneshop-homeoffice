@@ -68,8 +68,7 @@ public class InfrastructureDomainTest {
         assertEquals(now, rec.orderCompletedTimestamp());
         assertEquals(now, rec.timestamp());
         assertNotNull(rec.toString());
-        assertNotNull(rec.getExternalOrderId());
-        assertNull(rec.getExternalOrderId()); // null
+        assertNull(rec.getExternalOrderId());
     }
 
     // ── EventType ─────────────────────────────────────────────────────────────

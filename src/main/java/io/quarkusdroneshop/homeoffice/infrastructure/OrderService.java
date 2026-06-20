@@ -45,7 +45,7 @@ public class OrderService {
     @Transactional
     public void process(OrderRecord orderRecord) {
         String orderId = orderRecord.orderId();
-        Order order = Order.find("cast(orderid as text) = ?1", orderId).firstResult();
+        Order order = Order.find("externalOrderId = ?1", orderId).firstResult();
         boolean existenceOrder = (order != null);
 
         if (existenceOrder == true) {
