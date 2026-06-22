@@ -24,3 +24,7 @@ spec:
     - resource:shop-asite-orders-in
     - resource:shop-bsite-orders-up
     - resource:shop-asite-loyalty-updates
+  consumesApis:
+    - kafka-shop-asite-orders-in
+    - kafka-shop-bsite-orders-up
+    - kafka-shop-asite-loyalty-updates
