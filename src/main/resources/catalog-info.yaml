@@ -20,6 +20,7 @@ spec:
   lifecycle: production
   system: sandbox1332
   dependsOn:
+    - resource:droneshopdb-postgresql
     - resource:shop-cluster-kafka
     - resource:shop-asite-orders-in
     - resource:shop-bsite-orders-up
