@@ -6,8 +6,21 @@ metadata:
   labels:
     app: homeoffice
   annotations:
-    github.com/project-slug: quarkusdroneshop/homeoffice
+    github.com/project-slug: quarkusdroneshop/quarkusdroneshop-homeoffice
+    backstage.io/kubernetes-id: quarkusdroneshop-homeoffice
+    backstage.io/kubernetes-cluster: sandbox1332
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=quarkusdroneshop-homeoffice
+    tektonci.io/pipeline: build-and-push-quarkusdroneshop-homeoffice
+    tektonci.io/pipelineNamespace: quarkusdroneshop-cicd
+    tekton.dev/cicd: "true"
+    janus-idp.io/tekton: "true"
 spec:
-  type: website
+  type: service
   owner: user:default/nmushino
   lifecycle: production
+  system: sandbox1332
+  dependsOn:
+    - resource:shop-cluster-kafka
+    - resource:shop-asite-orders-in
+    - resource:shop-bsite-orders-up
+    - resource:shop-asite-loyalty-updates
