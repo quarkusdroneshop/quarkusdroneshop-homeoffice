@@ -3,6 +3,9 @@ kind: Component
 metadata:
   name: quarkusdroneshop-homeoffice
   description: バックヤード業務のマイクロサービスです
+  tags:
+    - latest
+    - c-cluster
   labels:
     app: homeoffice
   annotations:
