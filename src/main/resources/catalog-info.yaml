@@ -29,3 +29,119 @@ spec:
     - kafka-shop-asite-orders-in
     - kafka-shop-bsite-orders-up
     - kafka-shop-asite-loyalty-updates
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: kafka-shop-asite-orders-in
+  description: "Kafka トピック: shop-asite.orders-in（注文チケット受信）"
+  annotations:
+    backstage.io/kubernetes-cluster: b-cluster
+spec:
+  type: asyncapi
+  lifecycle: production
+  owner: user:default/nmushino
+  system: b-cluster
+  definition: |
+    asyncapi: 2.6.0
+    info:
+      title: shop-asite.orders-in
+      version: 1.0.0
+      description: ドローンショップ注文チケット受信トピック
+    servers:
+      production:
+        url: shop-cluster-kafka-bootstrap:9092
+        protocol: kafka
+    channels:
+      shop-asite.orders-in:
+        description: 注文チケットを受信するトピック
+        subscribe:
+          operationId: receiveOrder
+          message:
+            name: OrderTicket
+            contentType: application/json
+            payload:
+              type: object
+              properties:
+                orderId:
+                  type: string
+                item:
+                  type: string
+                quantity:
+                  type: integer
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: kafka-shop-bsite-orders-up
+  description: "Kafka トピック: shop-bsite.orders-up（注文ステータス更新）"
+  annotations:
+    backstage.io/kubernetes-cluster: b-cluster
+spec:
+  type: asyncapi
+  lifecycle: production
+  owner: user:default/nmushino
+  system: b-cluster
+  definition: |
+    asyncapi: 2.6.0
+    info:
+      title: shop-bsite.orders-up
+      version: 1.0.0
+      description: 注文ステータス更新トピック
+    servers:
+      production:
+        url: shop-cluster-kafka-bootstrap:9092
+        protocol: kafka
+    channels:
+      shop-bsite.orders-up:
+        description: 注文ステータス更新を受信するトピック
+        subscribe:
+          operationId: receiveOrderUpdate
+          message:
+            name: OrderUpdate
+            contentType: application/json
+            payload:
+              type: object
+              properties:
+                orderId:
+                  type: string
+                status:
+                  type: string
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: kafka-shop-asite-loyalty-updates
+  description: "Kafka トピック: shop-asite.loyalty-updates（ロイヤリティ更新）"
+  annotations:
+    backstage.io/kubernetes-cluster: b-cluster
+spec:
+  type: asyncapi
+  lifecycle: production
+  owner: user:default/nmushino
+  system: b-cluster
+  definition: |
+    asyncapi: 2.6.0
+    info:
+      title: shop-asite.loyalty-updates
+      version: 1.0.0
+      description: ロイヤリティポイント更新トピック
+    servers:
+      production:
+        url: shop-cluster-kafka-bootstrap:9092
+        protocol: kafka
+    channels:
+      shop-asite.loyalty-updates:
+        description: ロイヤリティ更新情報を受信するトピック
+        subscribe:
+          operationId: receiveLoyaltyUpdate
+          message:
+            name: LoyaltyUpdate
+            contentType: application/json
+            payload:
+              type: object
+              properties:
+                customerId:
+                  type: string
+                points:
+                  type: integer
