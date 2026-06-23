@@ -8,7 +8,7 @@ metadata:
   annotations:
     github.com/project-slug: quarkusdroneshop/quarkusdroneshop-homeoffice
     backstage.io/kubernetes-id: quarkusdroneshop-homeoffice
-    backstage.io/kubernetes-cluster: sandbox1332
+    backstage.io/kubernetes-cluster: b-cluster
     backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=quarkusdroneshop-homeoffice
     tektonci.io/pipeline: build-and-push-quarkusdroneshop-homeoffice
     tektonci.io/pipelineNamespace: quarkusdroneshop-cicd
@@ -18,7 +18,7 @@ spec:
   type: microservice
   owner: user:default/nmushino
   lifecycle: production
-  system: sandbox1332
+  system: b-cluster
   dependsOn:
     - resource:droneshopdb-postgresql
     - resource:shop-cluster-kafka
