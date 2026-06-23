@@ -8,7 +8,7 @@ metadata:
   annotations:
     github.com/project-slug: quarkusdroneshop/quarkusdroneshop-homeoffice
     backstage.io/kubernetes-id: quarkusdroneshop-homeoffice
-    backstage.io/kubernetes-cluster: b-cluster
+    backstage.io/kubernetes-cluster: c-cluster
     backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=quarkusdroneshop-homeoffice
     tektonci.io/pipeline: build-and-push-quarkusdroneshop-homeoffice
     tektonci.io/pipelineNamespace: quarkusdroneshop-cicd
@@ -18,7 +18,7 @@ spec:
   type: microservice
   owner: user:default/nmushino
   lifecycle: production
-  system: b-cluster
+  system: c-cluster
   dependsOn:
     - resource:droneshopdb-postgresql
     - resource:shop-cluster-kafka
@@ -29,6 +29,8 @@ spec:
     - kafka-shop-asite-orders-in
     - kafka-shop-bsite-orders-up
     - kafka-shop-asite-loyalty-updates
+  providesApis:
+    - quarkusdroneshop-homeoffice-graphql
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
@@ -145,3 +147,90 @@ spec:
                   type: string
                 points:
                   type: integer
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: quarkusdroneshop-homeoffice-graphql
+  description: "homeoffice バックヤード業務 GraphQL API"
+  annotations:
+    backstage.io/kubernetes-cluster: c-cluster
+spec:
+  type: graphql
+  lifecycle: production
+  owner: user:default/nmushino
+  system: c-cluster
+  definition: |
+    type Query {
+      """指定ロケーションの注文一覧を取得"""
+      ordersForLocation(location: String!): [Order]
+
+      """全ロケーションの注文集計を取得"""
+      getOrdersByLocation: [LocationOrders]
+
+      """全商品の販売実績を取得"""
+      getItemSales: [ItemSales]
+
+      """日付範囲で商品別日次販売実績を取得"""
+      getProductSalesByDate(startDate: String!, endDate: String!): [ProductSales]
+
+      """日付範囲で商品別売上合計を取得"""
+      getItemSalesTotalsByDate(startDate: String!, endDate: String!): [ItemSales]
+
+      """全ロケーション・スタッフ別販売実績を取得"""
+      getStoreServerSales: [StoreServerSales]
+
+      """日付範囲でロケーション・スタッフ別販売実績を取得"""
+      getStoreServerSalesByDate(startDate: String!, endDate: String!): [StoreServerSales]
+
+      """日付範囲の平均注文処理時間を取得（ミリ秒）"""
+      getAverageOrderUpTime(startDate: String!, endDate: String!): Int
+    }
+
+    type Order {
+      orderId: String
+      location: String
+      loyaltyMemberId: String
+      externalOrderId: String
+      item: String
+      orderPlacedTimestamp: String
+      orderCompletedTimestamp: String
+      lineItems: [LineItem]
+      total: Float
+    }
+
+    type LineItem {
+      item: String
+      price: Float
+      preparedBy: String
+    }
+
+    type LocationOrders {
+      location: String
+      orders: [Order]
+    }
+
+    type ItemSales {
+      item: String
+      salesTotal: Int
+      price: Float
+      revenue: Float
+    }
+
+    type ProductSales {
+      item: String
+      productItemSales: [ProductItemSales]
+    }
+
+    type ProductItemSales {
+      item: String
+      saleDate: String
+      salesTotal: Float
+      revenue: Float
+    }
+
+    type StoreServerSales {
+      store: String
+      server: String
+      itemSales: [ItemSales]
+    }
