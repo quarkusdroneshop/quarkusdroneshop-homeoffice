@@ -1,0 +1,34 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: quarkusdroneshop-homeoffice
+  description: "quarkusdroneshop-homeoffice のバックヤード業務バックエンドサービスです"
+  tags:
+    - latest
+    - c-cluster
+  labels:
+    app: homeoffice
+  annotations:
+    backstage.io/kubernetes-id: quarkusdroneshop-homeoffice
+    backstage.io/kubernetes-cluster: c-cluster
+    backstage.io/kubernetes-label-selector: app.kubernetes.io/instance=quarkusdroneshop-homeoffice
+    argocd/app-selector: app.kubernetes.io/instance=quarkusdroneshop-homeoffice
+    tektonci.io/pipeline: build-and-push-quarkusdroneshop-homeoffice
+    tektonci.io/pipelineNamespace: quarkusdroneshop-cicd
+    tekton.dev/type: pipeline
+    tekton.dev/cicd: "true"
+    janus-idp.io/tekton: "true"
+    rhdh.redhat.com/tekton-enabled: "true"
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: service
+  lifecycle: production
+  owner: user:default/nmushino
+  system: c-cluster
+  dependsOn:
+    - resource:shop-cluster-kafka
+    - resource:shop-asite-loyalty-updates
+  consumesApis:
+    - kafka-shop-asite-loyalty-updates
+  providesApis:
+    - quarkusdroneshop-homeoffice-graphql
