@@ -33,17 +33,17 @@ spec:
     - resource:shop-bsite-orders-up
     - resource:shop-asite-loyalty-updates
   consumesApis:
-    - kafka-bsite-orders-in
+    - kafka-asite-orders-in
     - kafka-bsite-orders-up
-    - kafka-bsite-loyalty-updates
+    - kafka-asite-loyalty-updates
   providesApis:
     - quarkusdroneshop-homeoffice-graphql
 ---
 apiVersion: backstage.io/v1alpha1
 kind: API
 metadata:
-  name: kafka-bsite-orders-in
-  description: "Kafka トピック: shop-asite.orders-in（注文チケット受信）"
+  name: kafka-asite-orders-in
+  description: "Kafka トピック: shop-asite.orders-in（注文チケット受信、MM2ミラー）"
   annotations:
     backstage.io/kubernetes-cluster: b-cluster
     openmetadata/explore-url: "http://openmetadata-openmetadata.apps.ocp.hfczn.sandbox2320.opentlc.com/topic/external-shop-cluster-kafka-bsite%3A9094.orders-in/schema"
@@ -130,8 +130,8 @@ spec:
 apiVersion: backstage.io/v1alpha1
 kind: API
 metadata:
-  name: kafka-bsite-loyalty-updates
-  description: "Kafka トピック: shop-asite.loyalty-updates（ロイヤリティ更新）"
+  name: kafka-asite-loyalty-updates
+  description: "Kafka トピック: shop-asite.loyalty-updates（ロイヤリティ更新、MM2ミラー）"
   annotations:
     backstage.io/kubernetes-cluster: b-cluster
     openmetadata/explore-url: "http://openmetadata-openmetadata.apps.ocp.hfczn.sandbox2320.opentlc.com/topic/external-shop-cluster-kafka-bsite%3A9094.loyalty-updates/schema"
