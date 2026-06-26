@@ -1,33 +1,134 @@
-# Docs
-Please see the Github Pages Site for complete documentation: [quarkusdroneshop.github.io](https://quarkusdroneshop.github.io)
+# Homeoffice Backend マイクロサービス
 
-# homeoffice-backend project
+## 概要
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Homeoffice Backend はドローンショップの **ホームオフィス管理バックエンドサービス** です。
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+- ホームオフィスからの注文管理・閲覧機能を提供
+- GraphQL API でフロントエンド（homeoffice-ui）と連携
+- 注文・在庫データを PostgreSQL から取得
 
-## Running the application in dev mode
+**フレームワーク**: Quarkus  
+**デプロイ先クラスター**: c-cluster
 
-You can run your application in dev mode that enables live coding using:
+---
+
+## アーキテクチャ
+
 ```
-./mvnw quarkus:dev
+Homeoffice UI（c-cluster）
+        │
+        ▼ GraphQL
+┌────────────────────┐
+│  Homeoffice        │
+│  Backend           │──► PostgreSQL (droneshopdb)
+│                    │
+│  /graphql          │──► Kafka（注文状況監視）
+└────────────────────┘
 ```
 
-## Packaging and running the application
+### API エンドポイント
 
-The application can be packaged using `./mvnw package`.
-It produces the `homeoffice-backend-1.0-SNAPSHOT-runner.jar` file in the `/target` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/lib` directory.
+| エンドポイント | プロトコル | 説明 |
+|--------------|----------|------|
+| `/graphql` | GraphQL | 注文・在庫クエリ |
+| `/q/health` | HTTP | ヘルスチェック |
 
-The application is now runnable using `java -jar target/homeoffice-backend-1.0-SNAPSHOT-runner.jar`.
+### 依存サービス
 
-## Creating a native executable
+- **PostgreSQL** (droneshopdb): 注文・在庫データ参照
+- **quarkusdroneshop-homeoffice-ui**: フロントエンド
 
-You can create a native executable using: `./mvnw package -Pnative`.
+---
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: `./mvnw package -Pnative -Dquarkus.native.container-build=true`.
+## ローカル開発
 
-You can then execute your native executable with: `./target/homeoffice-backend-1.0-SNAPSHOT-runner`
+### 前提条件
 
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/building-native-image.
+- Java 17+
+- Docker / Docker Compose
+
+### 1. インフラ起動
+
+```shell
+git clone https://github.com/quarkusdroneshop/quarkusdroneshop-support.git
+cd quarkusdroneshop-support
+docker compose up -d
+```
+
+### 2. アプリケーション起動
+
+```shell
+git clone https://github.com/quarkusdroneshop/quarkusdroneshop-homeoffice.git
+cd quarkusdroneshop-homeoffice
+./mvnw clean compile quarkus:dev
+```
+
+GraphQL UI: http://localhost:8080/q/graphql-ui
+
+### 環境変数
+
+| 変数名 | デフォルト | 説明 |
+|--------|-----------|------|
+| `PGSQL_URL` | `jdbc:postgresql://localhost:5432/droneshopdb?currentSchema=droneshop` | DB 接続 URL |
+| `PGSQL_USER` | `droneshopuser` | DB ユーザー名 |
+| `PGSQL_PASS` | `redhat-21` | DB パスワード |
+
+### GraphQL クエリ例
+
+```graphql
+# 全注文一覧
+query {
+  orders {
+    orderId
+    item
+    status
+    location
+  }
+}
+```
+
+---
+
+## 本番デプロイ（Tekton Pipeline）
+
+### パイプライン概要
+
+```
+fetch-repository → semgrep-scan → maven-run → push-oc-apps
+```
+
+### 手動実行
+
+```shell
+tkn pipeline start build-and-push-quarkusdroneshop-homeoffice \
+  -n quarkusdroneshop-cicd \
+  --use-param-defaults
+```
+
+### Native ビルド（オプション）
+
+```shell
+# GraalVM なしでネイティブビルド
+./mvnw package -Pnative -Dquarkus.native.container-build=true
+```
+
+---
+
+## テスト
+
+```shell
+# ユニットテスト
+./mvnw test
+
+# 統合テスト
+./mvnw verify
+```
+
+---
+
+## 注意事項
+
+- **GraphQL スキーマ**: `src/main/resources/graphql/` に定義。スキーマ変更時は homeoffice-ui との互換性を確認してください。
+- **読み取り専用**: このサービスは主に参照系 API です。注文作成は Web サービス経由で行います。
+- **c-cluster 接続**: RHDH の Kubernetes タブで c-cluster のポッド状態を確認できます。
