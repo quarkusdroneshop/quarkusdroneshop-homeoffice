@@ -27,8 +27,8 @@ spec:
   lifecycle: production
   system: c-cluster
   dependsOn:
-    - resource:droneshopdb-postgresql
-    - resource:shop-cluster-kafka
+    - resource:droneshopdb-costgresql
+    - resource:shop-cluster-kafka-csite
     - resource:shop-asite-orders-in
     - resource:shop-bsite-orders-up
     - resource:shop-asite-loyalty-updates
