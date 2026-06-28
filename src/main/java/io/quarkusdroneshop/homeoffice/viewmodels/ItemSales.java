@@ -1,6 +1,9 @@
 package io.quarkusdroneshop.homeoffice.viewmodels;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import io.quarkusdroneshop.homeoffice.domain.Item;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkusdroneshop.homeoffice.domain.Order;
@@ -13,7 +16,11 @@ import java.util.Date;
 
 @Entity
 @Table(name="itemsales")
-public class ItemSales extends PanacheEntity {
+public class ItemSales extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
     @ManyToOne
     @JoinColumn(name = "store_server_sales_id")

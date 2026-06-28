@@ -1,12 +1,19 @@
 package io.quarkusdroneshop.homeoffice.infrastructure.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 import jakarta.persistence.Entity;
 import java.util.Objects;
 
 @Entity
-public class StoreLocation extends PanacheEntity {
+public class StoreLocation extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
     String location;
 

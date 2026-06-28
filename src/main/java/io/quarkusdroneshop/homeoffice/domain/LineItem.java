@@ -1,6 +1,6 @@
 package io.quarkusdroneshop.homeoffice.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 
 import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.*;
@@ -14,7 +14,11 @@ import java.util.UUID;
 
 @Entity
 @Table(name="lineItems")
-public class LineItem extends PanacheEntity {
+public class LineItem extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "order_id")

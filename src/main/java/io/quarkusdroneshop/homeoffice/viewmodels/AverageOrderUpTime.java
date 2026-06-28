@@ -1,6 +1,9 @@
 package io.quarkusdroneshop.homeoffice.viewmodels;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkusdroneshop.homeoffice.HomeOfficeInitializer;
 import io.quarkusdroneshop.homeoffice.domain.Order;
@@ -19,7 +22,11 @@ import org.slf4j.LoggerFactory;
 
 @Entity
 @Table(name="averageorderuptime")
-public class AverageOrderUpTime extends PanacheEntity {
+public class AverageOrderUpTime extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public Long id;
     
     private static final Logger LOGGER = LoggerFactory.getLogger(AverageOrderUpTime.class);
 
