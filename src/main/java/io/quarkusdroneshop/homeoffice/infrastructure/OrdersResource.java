@@ -402,8 +402,8 @@ public class OrdersResource {
             Instant completed = order.getOrderCompletedTimestamp();
             if (placed == null || completed == null) continue;
 
-            // Duration を小数ミリ秒で計算
-            double millis = (Duration.between(placed, completed).toNanos() / 1_000_000.0) * 100;
+            // Duration をミリ秒で計算
+            double millis = Duration.between(placed, completed).toNanos() / 1_000_000.0;
 
             totalMillis += millis;
             validCount++;
@@ -433,10 +433,8 @@ public class OrdersResource {
         latest.calculatedAt = now;
         latest.persist();
 
-        // ★ ここで秒に変換
-        double avgSeconds = avgMillis * 1000.0;
-
-        return (int)avgSeconds; // 小数ミリ秒で返す
+        // ミリ秒のまま返す
+        return (int) avgMillis;
     }
 
     public static List<Instant> getDatesBetween(Instant startDate, Instant endDate) {
