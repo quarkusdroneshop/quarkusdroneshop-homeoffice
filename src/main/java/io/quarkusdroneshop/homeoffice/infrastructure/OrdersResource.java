@@ -4,6 +4,7 @@ import io.quarkus.panache.common.Parameters;
 import io.quarkusdroneshop.homeoffice.domain.*;
 import io.quarkusdroneshop.homeoffice.viewmodels.*;
 import org.eclipse.microprofile.graphql.GraphQLApi;
+import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -493,5 +494,70 @@ public class OrdersResource {
             ));
         }
         return result;
+    }
+
+    /**
+     * 30分以上経過しても未完了の注文を「要対応注文」として返す。
+     * orderCompletedTimestamp が null かつ orderPlacedTimestamp が threshold より古いものを対象とする。
+     */
+    @Query
+    public List<FailedOrder> failedOrders() {
+        Instant threshold = Instant.now().minus(30, ChronoUnit.MINUTES);
+        List<Order> stuckOrders = Order.find(
+            "orderPlacedTimestamp < :threshold AND orderCompletedTimestamp IS NULL ORDER BY orderPlacedTimestamp ASC",
+            Parameters.with("threshold", threshold)
+        ).list();
+
+        List<FailedOrder> result = new ArrayList<>();
+        for (Order o : stuckOrders) {
+            String itemName = (o.getLineItems() != null && !o.getLineItems().isEmpty())
+                ? o.getLineItems().iterator().next().getItem().name()
+                : "UNKNOWN";
+
+            String name = (o.getCustomerLoyaltyId() != null && !o.getCustomerLoyaltyId().isBlank())
+                ? o.getCustomerLoyaltyId()
+                : o.getOrderId().substring(Math.max(0, o.getOrderId().length() - 8));
+
+            String failedAt = o.getOrderPlacedTimestamp() != null
+                ? o.getOrderPlacedTimestamp().toString() : Instant.now().toString();
+
+            // madeBy がある = 処理中だがタイムアウト、ない = キューで滞留
+            boolean hasWorker = o.getLineItems() != null && !o.getLineItems().isEmpty()
+                && o.getLineItems().iterator().next().getPreparedBy() != null
+                && !o.getLineItems().iterator().next().getPreparedBy().isBlank();
+            String failureReason = hasWorker ? "PROCESSING_TIMEOUT" : "QUEUE_TIMEOUT";
+
+            result.add(new FailedOrder(o.getOrderId(), name, itemName, failureReason, failedAt, 0));
+        }
+        return result;
+    }
+
+    /**
+     * 要対応注文のリトライ: 対象注文を完了済みとしてマークし、画面上から除去する。
+     * 実際の再処理は Kafka 経由で行うべきだが、デモ用として DB 上でのみ操作する。
+     */
+    @Mutation
+    @Transactional
+    public RetryResult retryOrder(String orderId) {
+        Order order = Order.find("orderId", orderId).firstResult();
+        if (order == null) {
+            return new RetryResult(false, "注文 " + orderId + " が見つかりません");
+        }
+        // デモ: 完了タイムスタンプを付与して「要対応」リストから除外する
+        order.orderCompletedTimestamp = Instant.now();
+        order.persist();
+        return new RetryResult(true, "注文 " + orderId + " をリトライキューに送信しました");
+    }
+
+    public static class RetryResult {
+        public boolean success;
+        public String message;
+        public RetryResult() {}
+        public RetryResult(boolean success, String message) {
+            this.success = success;
+            this.message = message;
+        }
+        public boolean isSuccess() { return success; }
+        public String getMessage()  { return message; }
     }
 }
