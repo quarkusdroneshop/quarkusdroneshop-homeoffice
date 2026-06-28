@@ -4,6 +4,7 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkusdroneshop.homeoffice.HomeOfficeInitializer;
 import io.quarkusdroneshop.homeoffice.domain.Order;
@@ -25,7 +26,8 @@ import org.slf4j.LoggerFactory;
 public class AverageOrderUpTime extends PanacheEntityBase {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "id_seq_gen")
+    @SequenceGenerator(name = "id_seq_gen", allocationSize = 1)
     public Long id;
     
     private static final Logger LOGGER = LoggerFactory.getLogger(AverageOrderUpTime.class);
