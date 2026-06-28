@@ -445,4 +445,55 @@ public class OrdersResource {
             .mapToObj(i -> startDate.plus(i, ChronoUnit.DAYS))
             .collect(Collectors.toList());
     }
+
+    /**
+     * 直近 4 時間の注文をライブボード用に返す。
+     * status は orderCompletedTimestamp / lineItem.preparedBy から推定する。
+     */
+    @Query
+    public List<io.quarkusdroneshop.homeoffice.viewmodels.LiveOrder> liveOrders() {
+        Instant since = Instant.now().minus(4, ChronoUnit.HOURS);
+        List<Order> orders = Order.find(
+            "orderPlacedTimestamp >= :since ORDER BY orderPlacedTimestamp DESC",
+            Parameters.with("since", since)
+        ).list();
+
+        List<io.quarkusdroneshop.homeoffice.viewmodels.LiveOrder> result = new ArrayList<>();
+        for (Order o : orders) {
+            // item: 最初の lineItem の item 名
+            String itemName = (o.getLineItems() != null && !o.getLineItems().isEmpty())
+                ? o.getLineItems().iterator().next().getItem().name()
+                : "UNKNOWN";
+
+            // madeBy: 最初の lineItem の preparedBy
+            String madeBy = (o.getLineItems() != null && !o.getLineItems().isEmpty())
+                ? o.getLineItems().iterator().next().getPreparedBy()
+                : null;
+
+            // status 判定
+            String status;
+            if (o.getOrderCompletedTimestamp() != null) {
+                status = "FULFILLED";
+            } else if (madeBy != null && !madeBy.isBlank()) {
+                status = "IN_PROGRESS";
+            } else {
+                status = "IN_QUEUE";
+            }
+
+            // name: loyaltyMemberId があれば使用、なければ orderId 末尾 8 文字
+            String name = (o.getCustomerLoyaltyId() != null && !o.getCustomerLoyaltyId().isBlank())
+                ? o.getCustomerLoyaltyId()
+                : o.getOrderId().substring(Math.max(0, o.getOrderId().length() - 8));
+
+            String createdAt = o.getOrderPlacedTimestamp() != null
+                ? o.getOrderPlacedTimestamp().toString() : null;
+            String updatedAt = o.getOrderCompletedTimestamp() != null
+                ? o.getOrderCompletedTimestamp().toString() : null;
+
+            result.add(new io.quarkusdroneshop.homeoffice.viewmodels.LiveOrder(
+                o.getOrderId(), name, itemName, status, madeBy, createdAt, updatedAt
+            ));
+        }
+        return result;
+    }
 }
