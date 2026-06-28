@@ -2,7 +2,9 @@ package io.quarkusdroneshop.homeoffice.infrastructure;
 
 import io.quarkus.vertx.web.RouteFilter;
 import io.vertx.ext.web.RoutingContext;
+import jakarta.enterprise.context.ApplicationScoped;
 
+@ApplicationScoped
 public class CorsRouteFilter {
 
     @RouteFilter(Integer.MAX_VALUE)
