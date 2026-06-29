@@ -403,8 +403,9 @@ public class OrdersResource {
             Instant completed = order.getOrderCompletedTimestamp();
             if (placed == null || completed == null) continue;
 
-            // Duration をミリ秒で計算
+            // Duration をミリ秒で計算（1ms 未満は無効データとして除外）
             double millis = Duration.between(placed, completed).toNanos() / 1_000_000.0;
+            if (millis < 1.0) continue;
 
             totalMillis += millis;
             validCount++;

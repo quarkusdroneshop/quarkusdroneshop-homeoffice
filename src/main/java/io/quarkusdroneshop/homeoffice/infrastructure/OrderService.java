@@ -117,7 +117,7 @@ public class OrderService {
             orderRecord.externalOrderId(),
             orderRecord.customerLoyaltyId(),
             Instant.now(),
-            Instant.now()
+            null
         );
     }
 
