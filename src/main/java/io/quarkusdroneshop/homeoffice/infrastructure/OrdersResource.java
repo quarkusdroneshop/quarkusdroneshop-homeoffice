@@ -2,6 +2,8 @@ package io.quarkusdroneshop.homeoffice.infrastructure;
 
 import io.quarkus.panache.common.Parameters;
 import io.quarkusdroneshop.homeoffice.domain.*;
+import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10LineItem;
+import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10proLineItem;
 import io.quarkusdroneshop.homeoffice.viewmodels.*;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
@@ -11,6 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import jakarta.inject.Inject;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
@@ -491,7 +495,7 @@ public class OrdersResource {
                 ? o.getOrderCompletedTimestamp().toString() : null;
 
             result.add(new io.quarkusdroneshop.homeoffice.viewmodels.LiveOrder(
-                o.getOrderId(), name, itemName, status, madeBy, createdAt, updatedAt
+                o.getOrderId(), name, itemName, status, madeBy, o.getLocation(), createdAt, updatedAt
             ));
         }
         return result;
@@ -555,6 +559,52 @@ public class OrdersResource {
         public String message;
         public RetryResult() {}
         public RetryResult(boolean success, String message) {
+            this.success = success;
+            this.message = message;
+        }
+        public boolean isSuccess() { return success; }
+        public String getMessage()  { return message; }
+    }
+
+    /**
+     * 全注文データをリセットする。
+     * FK 制約に従い以下の順で削除:
+     *   lineItems → itemsales / qdca10lineitems / qdca10prolineitems
+     *   → orders → storeserversales → productitemsales → productsales → averageorderuptime
+     */
+    @Mutation
+    @Transactional
+    public ResetResult resetData() {
+        logger.warn("### resetData mutation called — deleting all order data ###");
+        try {
+            long lineItems       = LineItem.deleteAll();
+            long itemSales       = ItemSales.deleteAll();
+            long qdca10Items     = Qdca10LineItem.deleteAll();
+            long qdca10proItems  = Qdca10proLineItem.deleteAll();
+            long orders          = Order.deleteAll();
+            long storeServerSales = StoreServerSales.deleteAll();
+            long productItemSales = ProductItemSales.deleteAll();
+            long productSales    = ProductSales.deleteAll();
+            long avgOrderUpTime  = AverageOrderUpTime.deleteAll();
+
+            String summary = String.format(
+                "orders=%d, lineItems=%d, itemSales=%d, storeServerSales=%d, " +
+                "productSales=%d, productItemSales=%d, avgOrderUpTime=%d",
+                orders, lineItems, itemSales, storeServerSales,
+                productSales, productItemSales, avgOrderUpTime);
+            logger.info("resetData complete: {}", summary);
+            return new ResetResult(true, "データをリセットしました。" + summary);
+        } catch (Exception e) {
+            logger.error("resetData failed", e);
+            return new ResetResult(false, "リセット失敗: " + e.getMessage());
+        }
+    }
+
+    public static class ResetResult {
+        public boolean success;
+        public String message;
+        public ResetResult() {}
+        public ResetResult(boolean success, String message) {
             this.success = success;
             this.message = message;
         }
