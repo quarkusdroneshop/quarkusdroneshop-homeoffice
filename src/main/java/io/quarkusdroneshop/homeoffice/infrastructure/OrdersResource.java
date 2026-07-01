@@ -456,17 +456,27 @@ public class OrdersResource {
 
     /**
      * 各マイクロサービスの /q/health を確認してステータスを返す。
-     * サービス URL は環境変数 HEALTH_URL_<NAME> で設定する。
+     * フロントエンドの Cluster Settings で設定したURLリストを inputs として受け取る。
+     * inputs が空の場合は環境変数 HEALTH_URL_<NAME> にフォールバックする。
      */
     @Query
-    public List<io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth> serviceHealthChecks() {
+    public List<io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth> serviceHealthChecks(
+            List<io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealthInput> inputs) {
+
         Map<String, String> services = new LinkedHashMap<>();
-        services.put("Web",        System.getenv().getOrDefault("HEALTH_URL_WEB",       ""));
-        services.put("Counter",    System.getenv().getOrDefault("HEALTH_URL_COUNTER",   ""));
-        services.put("QDCA10",     System.getenv().getOrDefault("HEALTH_URL_QDCA10",    ""));
-        services.put("QDCA10Pro",  System.getenv().getOrDefault("HEALTH_URL_QDCA10PRO", ""));
-        services.put("Inventory",  System.getenv().getOrDefault("HEALTH_URL_INVENTORY", ""));
-        services.put("Homeoffice", System.getenv().getOrDefault("HEALTH_URL_HOMEOFFICE", "http://localhost:8080/q/health"));
+        if (inputs != null && !inputs.isEmpty()) {
+            for (io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealthInput input : inputs) {
+                services.put(input.getName(), input.getUrl() != null ? input.getUrl() : "");
+            }
+        } else {
+            // フォールバック: 環境変数から読み取る
+            services.put("Web",        System.getenv().getOrDefault("HEALTH_URL_WEB",       ""));
+            services.put("Counter",    System.getenv().getOrDefault("HEALTH_URL_COUNTER",   ""));
+            services.put("QDCA10",     System.getenv().getOrDefault("HEALTH_URL_QDCA10",    ""));
+            services.put("QDCA10Pro",  System.getenv().getOrDefault("HEALTH_URL_QDCA10PRO", ""));
+            services.put("Inventory",  System.getenv().getOrDefault("HEALTH_URL_INVENTORY", ""));
+            services.put("Homeoffice", System.getenv().getOrDefault("HEALTH_URL_HOMEOFFICE", "http://localhost:8080/q/health"));
+        }
 
         HttpClient http = HttpClient.newBuilder()
             .connectTimeout(java.time.Duration.ofSeconds(5))
@@ -488,7 +498,6 @@ public class OrdersResource {
                     .build();
                 HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
                 String body = res.body();
-                // JSON に "status":"UP" が含まれていれば UP
                 String status = (res.statusCode() == 200 && body.contains("\"status\":\"UP\"")) ? "UP" : "DOWN";
                 results.add(new io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth(name, status, "HTTP " + res.statusCode()));
             } catch (Exception e) {
