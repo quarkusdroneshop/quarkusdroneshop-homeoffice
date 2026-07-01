@@ -3,7 +3,7 @@ package io.quarkusdroneshop.homeoffice.infrastructure.domain;
 import jakarta.persistence.GeneratedValue;
 import io.quarkusdroneshop.homeoffice.domain.Item;
 import io.quarkusdroneshop.homeoffice.viewmodels.StoreServerSales;
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import java.math.BigDecimal;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -12,7 +12,7 @@ import jakarta.persistence.ManyToOne;
 import java.util.Objects;
 
 @Entity
-public class Qdca10proLineItem {
+public class Qdca10proLineItem extends PanacheEntityBase {
     @Id
     @GeneratedValue
     public Long id;
