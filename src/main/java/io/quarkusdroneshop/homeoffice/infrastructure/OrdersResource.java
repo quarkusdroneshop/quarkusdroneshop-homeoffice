@@ -18,6 +18,10 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -448,6 +452,51 @@ public class OrdersResource {
         return IntStream.range(0, (int) numOfDaysBetween)
             .mapToObj(i -> startDate.plus(i, ChronoUnit.DAYS))
             .collect(Collectors.toList());
+    }
+
+    /**
+     * 各マイクロサービスの /q/health を確認してステータスを返す。
+     * サービス URL は環境変数 HEALTH_URL_<NAME> で設定する。
+     */
+    @Query
+    public List<io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth> serviceHealthChecks() {
+        Map<String, String> services = new LinkedHashMap<>();
+        services.put("Web",        System.getenv().getOrDefault("HEALTH_URL_WEB",       ""));
+        services.put("Counter",    System.getenv().getOrDefault("HEALTH_URL_COUNTER",   ""));
+        services.put("QDCA10",     System.getenv().getOrDefault("HEALTH_URL_QDCA10",    ""));
+        services.put("QDCA10Pro",  System.getenv().getOrDefault("HEALTH_URL_QDCA10PRO", ""));
+        services.put("Inventory",  System.getenv().getOrDefault("HEALTH_URL_INVENTORY", ""));
+        services.put("Homeoffice", System.getenv().getOrDefault("HEALTH_URL_HOMEOFFICE", "http://localhost:8080/q/health"));
+
+        HttpClient http = HttpClient.newBuilder()
+            .connectTimeout(java.time.Duration.ofSeconds(5))
+            .build();
+
+        List<io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth> results = new ArrayList<>();
+        for (Map.Entry<String, String> entry : services.entrySet()) {
+            String name = entry.getKey();
+            String url  = entry.getValue();
+            if (url == null || url.isBlank()) {
+                results.add(new io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth(name, "UNKNOWN", "URL not configured"));
+                continue;
+            }
+            try {
+                HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(java.time.Duration.ofSeconds(5))
+                    .GET()
+                    .build();
+                HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+                String body = res.body();
+                // JSON に "status":"UP" が含まれていれば UP
+                String status = (res.statusCode() == 200 && body.contains("\"status\":\"UP\"")) ? "UP" : "DOWN";
+                results.add(new io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth(name, status, "HTTP " + res.statusCode()));
+            } catch (Exception e) {
+                logger.warn("Health check failed for {}: {}", name, e.getMessage());
+                results.add(new io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth(name, "DOWN", e.getMessage()));
+            }
+        }
+        return results;
     }
 
     /**
