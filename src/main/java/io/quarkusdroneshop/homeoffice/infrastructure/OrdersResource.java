@@ -561,16 +561,19 @@ public class OrdersResource {
         double cpuUsage = 0;
         long heapUsed = 0;
         long heapMax = 0;
+        long nonHeapUsed = 0;
         int liveThreads = 0;
         double uptime = 0;
 
         for (String line : body.split("\n")) {
             if (line.startsWith("#")) continue;
             try {
-                if (line.startsWith("process_cpu_usage ")) {
+                if (line.startsWith("system_cpu_usage ")) {
                     cpuUsage = Double.parseDouble(line.split(" ")[1]);
                 } else if (line.startsWith("jvm_memory_used_bytes{") && line.contains("area=\"heap\"")) {
                     heapUsed += (long) Double.parseDouble(line.substring(line.lastIndexOf(' ') + 1));
+                } else if (line.startsWith("jvm_memory_used_bytes{") && line.contains("area=\"nonheap\"")) {
+                    nonHeapUsed += (long) Double.parseDouble(line.substring(line.lastIndexOf(' ') + 1));
                 } else if (line.startsWith("jvm_memory_max_bytes{") && line.contains("area=\"heap\"")) {
                     double v = Double.parseDouble(line.substring(line.lastIndexOf(' ') + 1));
                     if (v > 0) heapMax += (long) v;
@@ -581,7 +584,7 @@ public class OrdersResource {
                 }
             } catch (NumberFormatException ignored) {}
         }
-        return new io.quarkusdroneshop.homeoffice.viewmodels.ServiceMetricsResult(name, cpuUsage, heapUsed, heapMax, liveThreads, uptime);
+        return new io.quarkusdroneshop.homeoffice.viewmodels.ServiceMetricsResult(name, cpuUsage, heapUsed, heapMax, nonHeapUsed, liveThreads, uptime);
     }
 
     /** クラスタ設定をDBから取得 */
