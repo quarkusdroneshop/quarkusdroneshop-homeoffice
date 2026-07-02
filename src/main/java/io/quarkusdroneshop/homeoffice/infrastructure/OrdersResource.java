@@ -505,7 +505,7 @@ public class OrdersResource {
                 results.add(new io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth(name, status, body));
             } catch (Exception e) {
                 logger.warn("Health check failed for {}: {}", name, e.getMessage());
-                results.add(new io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth(name, "DOWN", e.getMessage()));
+                results.add(new io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth(name, "UNKNOWN", e.getMessage()));
             }
         }
         return results;
