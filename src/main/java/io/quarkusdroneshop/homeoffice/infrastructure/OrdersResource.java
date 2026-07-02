@@ -499,7 +499,9 @@ public class OrdersResource {
                     .build();
                 HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
                 String body = res.body();
-                String status = (res.statusCode() == 200 && body.contains("\"status\":\"UP\"")) ? "UP" : "DOWN";
+                boolean isUp = res.statusCode() == 200
+                    && (body.contains("\"status\":\"UP\"") || body.contains("\"status\": \"UP\""));
+                String status = isUp ? "UP" : "DOWN";
                 results.add(new io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth(name, status, body));
             } catch (Exception e) {
                 logger.warn("Health check failed for {}: {}", name, e.getMessage());
