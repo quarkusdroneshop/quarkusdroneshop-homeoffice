@@ -509,6 +509,79 @@ public class OrdersResource {
         return results;
     }
 
+    /**
+     * 各マイクロサービスの /q/metrics を取得し、CPU・メモリ・スレッド数を返す。
+     */
+    @Query
+    public List<io.quarkusdroneshop.homeoffice.viewmodels.ServiceMetricsResult> serviceMetrics(
+            List<io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealthInput> inputs) {
+
+        Map<String, String> services = new LinkedHashMap<>();
+        if (inputs != null && !inputs.isEmpty()) {
+            for (io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealthInput input : inputs) {
+                services.put(input.getName(), input.getUrl() != null ? input.getUrl() : "");
+            }
+        }
+
+        HttpClient http = HttpClient.newBuilder()
+            .connectTimeout(java.time.Duration.ofSeconds(5))
+            .build();
+
+        List<io.quarkusdroneshop.homeoffice.viewmodels.ServiceMetricsResult> results = new ArrayList<>();
+        for (Map.Entry<String, String> entry : services.entrySet()) {
+            String name = entry.getKey();
+            String url  = entry.getValue();
+            if (url == null || url.isBlank()) {
+                results.add(new io.quarkusdroneshop.homeoffice.viewmodels.ServiceMetricsResult(name, "URL not configured"));
+                continue;
+            }
+            try {
+                HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .timeout(java.time.Duration.ofSeconds(5))
+                    .GET()
+                    .build();
+                HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+                if (res.statusCode() != 200) {
+                    results.add(new io.quarkusdroneshop.homeoffice.viewmodels.ServiceMetricsResult(name, "HTTP " + res.statusCode()));
+                    continue;
+                }
+                results.add(parsePrometheusMetrics(name, res.body()));
+            } catch (Exception e) {
+                logger.warn("Metrics fetch failed for {}: {}", name, e.getMessage());
+                results.add(new io.quarkusdroneshop.homeoffice.viewmodels.ServiceMetricsResult(name, e.getMessage()));
+            }
+        }
+        return results;
+    }
+
+    private io.quarkusdroneshop.homeoffice.viewmodels.ServiceMetricsResult parsePrometheusMetrics(String name, String body) {
+        double cpuUsage = 0;
+        long heapUsed = 0;
+        long heapMax = 0;
+        int liveThreads = 0;
+        double uptime = 0;
+
+        for (String line : body.split("\n")) {
+            if (line.startsWith("#")) continue;
+            try {
+                if (line.startsWith("process_cpu_usage ")) {
+                    cpuUsage = Double.parseDouble(line.split(" ")[1]);
+                } else if (line.startsWith("jvm_memory_used_bytes{") && line.contains("area=\"heap\"")) {
+                    heapUsed += (long) Double.parseDouble(line.substring(line.lastIndexOf(' ') + 1));
+                } else if (line.startsWith("jvm_memory_max_bytes{") && line.contains("area=\"heap\"")) {
+                    double v = Double.parseDouble(line.substring(line.lastIndexOf(' ') + 1));
+                    if (v > 0) heapMax += (long) v;
+                } else if (line.startsWith("jvm_threads_live_threads ")) {
+                    liveThreads = (int) Double.parseDouble(line.split(" ")[1]);
+                } else if (line.startsWith("process_uptime_seconds ")) {
+                    uptime = Double.parseDouble(line.split(" ")[1]);
+                }
+            } catch (NumberFormatException ignored) {}
+        }
+        return new io.quarkusdroneshop.homeoffice.viewmodels.ServiceMetricsResult(name, cpuUsage, heapUsed, heapMax, liveThreads, uptime);
+    }
+
     /** クラスタ設定をDBから取得 */
     @Query
     public AppSettingsResult getAppSettings() {
