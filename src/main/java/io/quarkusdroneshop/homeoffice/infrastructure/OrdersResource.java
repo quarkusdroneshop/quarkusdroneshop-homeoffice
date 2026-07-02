@@ -2,6 +2,7 @@ package io.quarkusdroneshop.homeoffice.infrastructure;
 
 import io.quarkus.panache.common.Parameters;
 import io.quarkusdroneshop.homeoffice.domain.*;
+import io.quarkusdroneshop.homeoffice.infrastructure.domain.AppSettingsEntity;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10LineItem;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10proLineItem;
 import io.quarkusdroneshop.homeoffice.viewmodels.*;
@@ -506,6 +507,24 @@ public class OrdersResource {
             }
         }
         return results;
+    }
+
+    /** クラスタ設定をDBから取得 */
+    @Query
+    public AppSettingsResult getAppSettings() {
+        AppSettingsEntity e = AppSettingsEntity.load();
+        return new AppSettingsResult(e.clusterDomains, e.serviceCluster);
+    }
+
+    /** クラスタ設定をDBに保存（upsert） */
+    @Mutation
+    @Transactional
+    public AppSettingsResult saveAppSettings(AppSettingsInput input) {
+        AppSettingsEntity e = AppSettingsEntity.load();
+        if (input.clusterDomains != null) e.clusterDomains = input.clusterDomains;
+        if (input.serviceCluster != null) e.serviceCluster = input.serviceCluster;
+        e.persist();
+        return new AppSettingsResult(e.clusterDomains, e.serviceCluster);
     }
 
     /**
