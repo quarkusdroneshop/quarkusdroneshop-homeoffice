@@ -481,6 +481,7 @@ public class OrdersResource {
 
         HttpClient http = HttpClient.newBuilder()
             .connectTimeout(java.time.Duration.ofSeconds(5))
+            .followRedirects(HttpClient.Redirect.NORMAL)
             .build();
 
         List<io.quarkusdroneshop.homeoffice.viewmodels.ServiceHealth> results = new ArrayList<>();
@@ -527,6 +528,7 @@ public class OrdersResource {
 
         HttpClient http = HttpClient.newBuilder()
             .connectTimeout(java.time.Duration.ofSeconds(5))
+            .followRedirects(HttpClient.Redirect.NORMAL)
             .build();
 
         List<io.quarkusdroneshop.homeoffice.viewmodels.ServiceMetricsResult> results = new ArrayList<>();
