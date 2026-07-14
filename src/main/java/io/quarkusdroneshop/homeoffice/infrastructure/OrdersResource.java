@@ -426,7 +426,7 @@ public class OrdersResource {
         }
 
         double avgMillis = totalMillis / validCount;
-        avgMillis = Math.min(300_000.0, avgMillis);
+        avgMillis = Math.min(10_000_000.0, avgMillis);
 
         // デモ用に最新レコード更新（DB保存は整数ミリ秒）
         AverageOrderUpTime latest = AverageOrderUpTime.find("order by calculatedAt desc").firstResult();
@@ -437,7 +437,7 @@ public class OrdersResource {
         } else {
             double oldTotal = (double) latest.averageTime * latest.orderCount;
             int newCount = latest.orderCount + validCount;
-            latest.averageTime = (int) Math.min(300_000.0, (oldTotal + totalMillis) / newCount);
+            latest.averageTime = (int) Math.min(10_000_000.0, (oldTotal + totalMillis) / newCount);
             latest.orderCount = newCount;
         }
 
