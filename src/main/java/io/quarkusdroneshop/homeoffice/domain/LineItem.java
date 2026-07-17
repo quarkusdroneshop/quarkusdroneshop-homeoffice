@@ -4,7 +4,6 @@ import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.SequenceGenerator;
 
 import jakarta.json.bind.annotation.JsonbTransient;
 import jakarta.persistence.*;
@@ -21,9 +20,8 @@ import java.util.UUID;
 public class LineItem extends PanacheEntityBase {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "id_seq_gen")
-    @SequenceGenerator(name = "id_seq_gen", allocationSize = 1)
-    public Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    public UUID id;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "order_id")
