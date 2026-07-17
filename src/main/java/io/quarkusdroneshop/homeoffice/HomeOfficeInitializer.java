@@ -28,13 +28,15 @@ public class HomeOfficeInitializer {
 
         if (storeLocations.isPresent()) {
             loadLocations(storeLocations.get());
-        }else{
-            loadLocations(new ArrayList<>(){{
-                add("ATLANTA");
-                add("RALEIGH");
-                add("CHARLOTTE");
-                add("TOKYO");
-            }});
+        } else {
+            loadLocations(new ArrayList<>() {
+                {
+                    add("ATLANTA");
+                    add("RALEIGH");
+                    add("CHARLOTTE");
+                    add("TOKYO");
+                }
+            });
         }
     }
 

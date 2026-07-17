@@ -3,21 +3,28 @@ package io.quarkusdroneshop.homeoffice.domain;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import io.quarkusdroneshop.homeoffice.infrastructure.domain.StoreLocation;
-import io.smallrye.graphql.api.Scalar;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.persistence.*;
-import jakarta.transaction.Transactional;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.StringJoiner;
 
-@Entity 
-@Table(name="orders") 
+@Entity
+@Table(name = "orders")
 @RegisterForReflection
 public class Order extends PanacheEntityBase {
 
@@ -61,7 +68,9 @@ public class Order extends PanacheEntityBase {
     public Order() {
     }
             
-    public Order(String orderId, List<LineItem> lineItems, OrderSource orderSource, String location, String externalOrderId, String customerLoyaltyId, Instant orderPlacedTimestamp, Instant orderCompletedTimestamp) {
+    public Order(String orderId, List<LineItem> lineItems, OrderSource orderSource, String location,
+                 String externalOrderId, String customerLoyaltyId, Instant orderPlacedTimestamp,
+                 Instant orderCompletedTimestamp) {
         this.orderId = orderId;
         lineItems.forEach(lineItem -> {
             addLineItem(lineItem);
@@ -96,21 +105,39 @@ public class Order extends PanacheEntityBase {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Order order = (Order) o;
 
-        if (orderId != null ? !orderId.equals(order.orderId) : order.orderId != null) return false;
-        if (lineItems != null ? !lineItems.equals(order.lineItems) : order.lineItems != null) return false;
-        if (total != null ? !total.equals(order.total) : order.total != null) return false;
-        if (orderSource != order.orderSource) return false;
-        if (location != null ? !location.equals(order.location) : order.location != null) return false;
-        if (loyaltyMemberId != null ? !loyaltyMemberId.equals(order.loyaltyMemberId) : order.loyaltyMemberId != null)
+        if (orderId != null ? !orderId.equals(order.orderId) : order.orderId != null) {
             return false;
-        if (orderPlacedTimestamp != null ? !orderPlacedTimestamp.equals(order.orderPlacedTimestamp) : order.orderPlacedTimestamp != null)
+        }
+        if (lineItems != null ? !lineItems.equals(order.lineItems) : order.lineItems != null) {
             return false;
-        return orderCompletedTimestamp != null ? orderCompletedTimestamp.equals(order.orderCompletedTimestamp) : order.orderCompletedTimestamp == null;
+        }
+        if (total != null ? !total.equals(order.total) : order.total != null) {
+            return false;
+        }
+        if (orderSource != order.orderSource) {
+            return false;
+        }
+        if (location != null ? !location.equals(order.location) : order.location != null) {
+            return false;
+        }
+        if (loyaltyMemberId != null ? !loyaltyMemberId.equals(order.loyaltyMemberId) : order.loyaltyMemberId != null) {
+            return false;
+        }
+        if (orderPlacedTimestamp != null ? !orderPlacedTimestamp.equals(order.orderPlacedTimestamp)
+                : order.orderPlacedTimestamp != null) {
+            return false;
+        }
+        return orderCompletedTimestamp != null ? orderCompletedTimestamp.equals(order.orderCompletedTimestamp)
+                : order.orderCompletedTimestamp == null;
     }
 
     @Override
