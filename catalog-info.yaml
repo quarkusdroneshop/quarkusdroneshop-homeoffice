@@ -46,9 +46,9 @@ metadata:
   description: "homeoffice バックヤード業務 GraphQL API"
   annotations:
     backstage.io/kubernetes-cluster: c-cluster
-    openmetadata/explore-url: "http://openmetadata-openmetadata.apps.ocp.7n8gs.sandbox847.opentlc.com/service/apiServices/quarkusdroneshop-homeoffice?showDeletedTables=false"
+    openmetadata/explore-url: "http://openmetadata-openmetadata.apps.ocp.27qdr.sandbox1583.opentlc.com/service/apiServices/quarkusdroneshop-homeoffice?showDeletedTables=false"
   links:
-    - url: "http://openmetadata-openmetadata.apps.ocp.7n8gs.sandbox847.opentlc.com/service/apiServices/quarkusdroneshop-homeoffice?showDeletedTables=false"
+    - url: "http://openmetadata-openmetadata.apps.ocp.27qdr.sandbox1583.opentlc.com/service/apiServices/quarkusdroneshop-homeoffice?showDeletedTables=false"
       title: データカタログ
       icon: dashboard
 spec:
