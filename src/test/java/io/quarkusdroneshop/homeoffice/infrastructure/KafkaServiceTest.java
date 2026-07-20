@@ -45,10 +45,14 @@ public class KafkaServiceTest {
 
     @Test
     void testOnOrderUpdated_isCalled() {
-        InMemorySource<OrderRecord> source = connector.source("orders-updated");
-        source.send(buildOrderRecord());
+        InMemorySource<OrderUpMessage> source = connector.source("orders-updated");
+        OrderUpMessage msg = new OrderUpMessage();
+        msg.orderId = "nonexistent-order-id";
+        msg.lineItemId = "nonexistent-line-item-id";
+        msg.madeBy = "tester";
+        source.send(msg);
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(
-                () -> verify(kafkaService).onOrderUpated(any(OrderRecord.class)));
+                () -> verify(kafkaService).onOrderUpated(any(OrderUpMessage.class)));
     }
 
     @Test

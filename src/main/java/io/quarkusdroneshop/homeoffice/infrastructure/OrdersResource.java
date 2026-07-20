@@ -9,6 +9,8 @@ import io.quarkusdroneshop.homeoffice.viewmodels.*;
 import org.eclipse.microprofile.graphql.GraphQLApi;
 import org.eclipse.microprofile.graphql.Mutation;
 import org.eclipse.microprofile.graphql.Query;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -694,20 +696,22 @@ public class OrdersResource {
         return result;
     }
 
+    @Inject
+    @Channel(io.quarkusdroneshop.homeoffice.infrastructure.KafkaTopics.ORDER_RETRY_OUT)
+    Emitter<String> orderRetryEmitter;
+
     /**
-     * 要対応注文のリトライ: 対象注文を完了済みとしてマークし、画面上から除去する。
-     * 実際の再処理は Kafka 経由で行うべきだが、デモ用として DB 上でのみ操作する。
+     * 要対応注文のリトライ: Kafka に再処理リクエストを送信する。
+     * 実際の状態更新（preparedBy クリア・In Queue への復帰）は
+     * KafkaService#onOrderRetryRequested が非同期に行う。
      */
     @Mutation
-    @Transactional
     public RetryResult retryOrder(String orderId) {
         Order order = Order.find("orderId", orderId).firstResult();
         if (order == null) {
             return new RetryResult(false, "注文 " + orderId + " が見つかりません");
         }
-        // デモ: 完了タイムスタンプを付与して「要対応」リストから除外する
-        order.orderCompletedTimestamp = Instant.now();
-        order.persist();
+        orderRetryEmitter.send(orderId);
         return new RetryResult(true, "注文 " + orderId + " をリトライキューに送信しました");
     }
 
