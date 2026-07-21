@@ -146,19 +146,8 @@ public class KafkaService {
         order.persist();
     }
 
-    /**
-     * homeoffice の Item 列挙は QDC_A105_PRO01 のように大文字だが、
-     * counter / qdca10 / qdca10pro 側は QDC_A105_Pro01 のように Pro シリーズのみ
-     * 大文字小文字混在で定義されている。JSON デシリアライズが enum 名の完全一致に
-     * 依存しているため、送信前に表記を合わせる。
-     */
-    private String toUpstreamItemName(LineItem lineItem) {
-        String rawName = lineItem.getItem().name();
-        return rawName.replaceFirst("_PRO(\\d+)$", "_Pro$1");
-    }
-
     private void resendTicket(String orderId, LineItem lineItem, String displayName) {
-        String upstreamItem = toUpstreamItemName(lineItem);
+        String upstreamItem = lineItem.getItem().name();
         RetryOrderTicket ticket = new RetryOrderTicket(orderId, lineItem.id.toString(), upstreamItem, displayName);
 
         if (upstreamItem.contains("_Pro")) {

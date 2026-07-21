@@ -772,4 +772,97 @@ public class OrdersResource {
         public boolean isSuccess() { return success; }
         public String getMessage()  { return message; }
     }
+
+    /**
+     * inventory サービス (bsite) の REST API ベース URL。inventory-in (Kafka) は
+     * asite のミラートピックしか購読しておらず csite からは到達できないため、
+     * 在庫管理ページはこの REST API 経由で直接操作する。
+     */
+    private String inventoryApiUrl() {
+        return System.getenv().getOrDefault("INVENTORY_API_URL",
+                "http://inventory-quarkusdroneshop-demo.apps.ocp.659hh.sandbox2372.opentlc.com");
+    }
+
+    /** 在庫管理ページ用: 全品目の現在庫を取得する。 */
+    @Query
+    public List<io.quarkusdroneshop.homeoffice.viewmodels.InventoryLevel> warehouseInventoryLevels() {
+        HttpClient http = HttpClient.newBuilder()
+            .connectTimeout(java.time.Duration.ofSeconds(5))
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
+        try {
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(inventoryApiUrl() + "/inventory"))
+                .timeout(java.time.Duration.ofSeconds(5))
+                .header("Accept", "application/json")
+                .GET()
+                .build();
+            HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() != 200) {
+                logger.warn("inventoryLevels: inventory service returned HTTP {}", res.statusCode());
+                return Collections.emptyList();
+            }
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode root = mapper.readTree(res.body());
+            List<io.quarkusdroneshop.homeoffice.viewmodels.InventoryLevel> levels = new ArrayList<>();
+            if (root.isArray()) {
+                for (com.fasterxml.jackson.databind.JsonNode node : root) {
+                    levels.add(new io.quarkusdroneshop.homeoffice.viewmodels.InventoryLevel(
+                        node.path("item").asText(),
+                        node.path("inStockQuantity").asInt()));
+                }
+            }
+            levels.sort(Comparator.comparing(l -> l.item));
+            return levels;
+        } catch (Exception e) {
+            logger.warn("inventoryLevels: failed to reach inventory service: {}", e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * 在庫管理ページ用: 品目の在庫数を更新する。quantity=0 を指定すると欠品扱いになる。
+     */
+    @Mutation
+    public io.quarkusdroneshop.homeoffice.viewmodels.RestockResult restockInventoryItem(String item, int quantity) {
+        if (item == null || item.isBlank()) {
+            return new io.quarkusdroneshop.homeoffice.viewmodels.RestockResult(false, "item is required", null);
+        }
+        if (quantity < 0) {
+            return new io.quarkusdroneshop.homeoffice.viewmodels.RestockResult(false, "quantity must be >= 0", null);
+        }
+
+        HttpClient http = HttpClient.newBuilder()
+            .connectTimeout(java.time.Duration.ofSeconds(5))
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
+        try {
+            String body = String.format("{\"item\":\"%s\",\"quantity\":%d}", item, quantity);
+            HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create(inventoryApiUrl() + "/inventory/restock"))
+                .timeout(java.time.Duration.ofSeconds(5))
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+            HttpResponse<String> res = http.send(req, HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() != 200) {
+                logger.warn("restockInventoryItem: inventory service returned HTTP {}: {}", res.statusCode(), res.body());
+                return new io.quarkusdroneshop.homeoffice.viewmodels.RestockResult(
+                    false, "inventory service returned HTTP " + res.statusCode(), null);
+            }
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(res.body());
+            io.quarkusdroneshop.homeoffice.viewmodels.InventoryLevel level = new io.quarkusdroneshop.homeoffice.viewmodels.InventoryLevel(
+                node.path("item").asText(), node.path("inStockQuantity").asInt());
+            String message = quantity == 0
+                ? item + " を欠品にしました"
+                : item + " の在庫を " + quantity + " に更新しました";
+            return new io.quarkusdroneshop.homeoffice.viewmodels.RestockResult(true, message, level);
+        } catch (Exception e) {
+            logger.warn("restockInventoryItem: failed to reach inventory service: {}", e.getMessage());
+            return new io.quarkusdroneshop.homeoffice.viewmodels.RestockResult(
+                false, "inventory service unreachable: " + e.getMessage(), null);
+        }
+    }
 }

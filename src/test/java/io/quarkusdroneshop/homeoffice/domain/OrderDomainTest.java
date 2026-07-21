@@ -26,10 +26,10 @@ public class OrderDomainTest {
         assertEquals(BigDecimal.valueOf(144.00), Item.QDC_A103.getPrice());
         assertEquals(BigDecimal.valueOf(256.25), Item.QDC_A104_AC.getPrice());
         assertEquals(BigDecimal.valueOf(4.75), Item.QDC_A104_AT.getPrice());
-        assertEquals(BigDecimal.valueOf(553.00), Item.QDC_A105_PRO01.getPrice());
-        assertEquals(BigDecimal.valueOf(633.25), Item.QDC_A105_PRO02.getPrice());
-        assertEquals(BigDecimal.valueOf(735.50), Item.QDC_A105_PRO03.getPrice());
-        assertEquals(BigDecimal.valueOf(955.50), Item.QDC_A105_PRO04.getPrice());
+        assertEquals(BigDecimal.valueOf(553.00), Item.QDC_A105_Pro01.getPrice());
+        assertEquals(BigDecimal.valueOf(633.25), Item.QDC_A105_Pro02.getPrice());
+        assertEquals(BigDecimal.valueOf(735.50), Item.QDC_A105_Pro03.getPrice());
+        assertEquals(BigDecimal.valueOf(955.50), Item.QDC_A105_Pro04.getPrice());
     }
 
     @Test
