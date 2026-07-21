@@ -41,6 +41,11 @@ public class KafkaService {
     @Blocking
     public void onOrderCreated(final OrderRecord orderRecord) {
 
+        if (orderRecord == null) {
+            LOGGER.warn("Skipping null OrderRecord (unparseable message)");
+            return;
+        }
+
         LOGGER.debug("IngressOrder received: {}", orderRecord);
         //Order order = convertOrderRecordToOrder(orderRecord);
         //LOGGER.debug("Order : {}", order);
