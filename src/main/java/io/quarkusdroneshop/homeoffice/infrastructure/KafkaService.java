@@ -37,21 +37,9 @@ public class KafkaService {
     @Channel(QDCA10PRO_RETRY_OUT)
     Emitter<RetryOrderTicket> qdca10proRetryEmitter;
 
-    @Incoming(ORDERS_CREATED)
-    @Blocking
-    public void onOrderCreated(final OrderRecord orderRecord) {
-
-        if (orderRecord == null) {
-            LOGGER.warn("Skipping null OrderRecord (unparseable message)");
-            return;
-        }
-
-        LOGGER.debug("IngressOrder received: {}", orderRecord);
-        //Order order = convertOrderRecordToOrder(orderRecord);
-        //LOGGER.debug("Order : {}", order);
-        //order.persist(); 
-        orderService.process(orderRecord);
-    }
+    // orders-created (dataproduct-order-events) の取り込みは OrderAssemblyAggregator に
+    // 移管した。明細単位で届くイベントを orderId ごとに集約してから OrderService.process() を
+    // 呼ぶ必要があるため、単純な @Incoming ハンドラでは表現できずクラスを分けている。
 
     /**
      * qdca10 / qdca10pro が発行する OrderUp（{orderId, lineItemId, item, name, timestamp, madeBy}）
@@ -64,6 +52,14 @@ public class KafkaService {
     @Transactional
     public void onOrderUpated(final OrderUpMessage orderUp) {
 
+        // dataproduct-order-events を共有購読しているため、LINE_ITEM_STATUS_CHANGED 以外
+        // (ORDER_PLACED 等) は OrderUpMessageAvroDeserializer が null を返して破棄する。
+        // 専用トピック (旧 shop-bsite.orders-up) の頃は全メッセージが必ず OrderUp だったため
+        // このチェックが無く、null 混入で NullPointerException によりクラッシュループしていた。
+        if (orderUp == null) {
+            return;
+        }
+
         LOGGER.debug("OrderUp received: orderId={}, lineItemId={}, madeBy={}",
             orderUp.orderId, orderUp.lineItemId, orderUp.madeBy);
 
@@ -72,36 +68,44 @@ public class KafkaService {
             return;
         }
 
-        Order order = Order.find("orderId", orderUp.orderId).firstResult();
-        if (order == null) {
-            LOGGER.warn("OrderUp received for unknown orderId: {}", orderUp.orderId);
-            return;
-        }
-
-        List<LineItem> lineItems = order.getLineItems() != null
-            ? new ArrayList<>(order.getLineItems())
-            : new ArrayList<>();
-
-        boolean matched = false;
-        for (LineItem lineItem : lineItems) {
-            if (lineItem.id != null && lineItem.id.toString().equals(orderUp.lineItemId)) {
-                lineItem.setPreparedBy(orderUp.madeBy != null ? orderUp.madeBy : "unknown");
-                matched = true;
-                break;
+        try {
+            // 過去 (Item enum のリネーム前, 例: QDC_A105_PRO03 -> QDC_A105_Pro03) に保存された
+            // 注文は、DB 上の item カラムが現在の enum 定数と一致せず Order.find() の時点で
+            // IllegalArgumentException ("No enum constant ...") が飛ぶことがある。1件の不正
+            // レコードでチャンネル全体がクラッシュループしないよう、ここで捕捉して読み飛ばす。
+            Order order = Order.find("orderId", orderUp.orderId).firstResult();
+            if (order == null) {
+                LOGGER.warn("OrderUp received for unknown orderId: {}", orderUp.orderId);
+                return;
             }
-        }
 
-        if (!matched) {
-            LOGGER.warn("OrderUp lineItemId {} not found on order {}", orderUp.lineItemId, orderUp.orderId);
-            return;
-        }
+            List<LineItem> lineItems = order.getLineItems() != null
+                ? new ArrayList<>(order.getLineItems())
+                : new ArrayList<>();
 
-        boolean allPrepared = !lineItems.isEmpty()
-            && lineItems.stream().allMatch(li -> li.getPreparedBy() != null && !li.getPreparedBy().isBlank());
-        if (allPrepared) {
-            order.orderCompletedTimestamp = Instant.now();
+            boolean matched = false;
+            for (LineItem lineItem : lineItems) {
+                if (lineItem.id != null && lineItem.id.toString().equals(orderUp.lineItemId)) {
+                    lineItem.setPreparedBy(orderUp.madeBy != null ? orderUp.madeBy : "unknown");
+                    matched = true;
+                    break;
+                }
+            }
+
+            if (!matched) {
+                LOGGER.warn("OrderUp lineItemId {} not found on order {}", orderUp.lineItemId, orderUp.orderId);
+                return;
+            }
+
+            boolean allPrepared = !lineItems.isEmpty()
+                && lineItems.stream().allMatch(li -> li.getPreparedBy() != null && !li.getPreparedBy().isBlank());
+            if (allPrepared) {
+                order.orderCompletedTimestamp = Instant.now();
+            }
+            order.persist();
+        } catch (Exception e) {
+            LOGGER.error("Failed to process OrderUp for orderId={}, skipping", orderUp.orderId, e);
         }
-        order.persist();
     }
 
     @Incoming(LOYALTY_MEMBER_PURCHASE)

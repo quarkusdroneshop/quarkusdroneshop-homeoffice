@@ -106,6 +106,15 @@ public class OrdersResource {
     @Transactional
     @Query
     public List<ProductSales> getProductSalesByDate(String startDate, String endDate) {
+        try {
+            return doGetProductSalesByDate(startDate, endDate);
+        } catch (Exception e) {
+            logger.error("getProductSalesByDate failed", e);
+            throw e;
+        }
+    }
+
+    private List<ProductSales> doGetProductSalesByDate(String startDate, String endDate) {
         Instant functionStart = Instant.now();
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
@@ -864,5 +873,44 @@ public class OrdersResource {
             return new io.quarkusdroneshop.homeoffice.viewmodels.RestockResult(
                 false, "inventory service unreachable: " + e.getMessage(), null);
         }
+    }
+
+    @Inject
+    AnalyticsService analyticsService;
+
+    /** 分析ダッシュボード用: 品目別売上 (5分窓, 直近分)。 */
+    @Query
+    public List<io.quarkusdroneshop.homeoffice.viewmodels.SalesTrend> salesTrends5m() {
+        return analyticsService.getSalesTrends5m();
+    }
+
+    /** 分析ダッシュボード用: 品目別売上 (日次窓)。 */
+    @Query
+    public List<io.quarkusdroneshop.homeoffice.viewmodels.SalesTrend> salesTrendsDaily() {
+        return analyticsService.getSalesTrendsDaily();
+    }
+
+    /** 分析ダッシュボード用: QDCA10 の明細単位リードタイム (PLACED→FULFILLED)。 */
+    @Query
+    public List<io.quarkusdroneshop.homeoffice.viewmodels.AssemblyLeadTime> qdca10LeadTimes() {
+        return analyticsService.getQdca10LeadTimes();
+    }
+
+    /** 分析ダッシュボード用: QDCA10pro の明細単位リードタイム (PLACED→FULFILLED)。 */
+    @Query
+    public List<io.quarkusdroneshop.homeoffice.viewmodels.AssemblyLeadTime> qdca10proLeadTimes() {
+        return analyticsService.getQdca10proLeadTimes();
+    }
+
+    /** 分析ダッシュボード用: 品目別の補充要求数/欠品キャンセル数 (1時間窓)。 */
+    @Query
+    public List<io.quarkusdroneshop.homeoffice.viewmodels.InventoryTurnover> inventoryTurnover() {
+        return analyticsService.getInventoryTurnover();
+    }
+
+    /** 分析ダッシュボード用: 品目別の現在の欠品リスク状態。 */
+    @Query
+    public List<io.quarkusdroneshop.homeoffice.viewmodels.StockoutRisk> stockoutRisk() {
+        return analyticsService.getStockoutRisk();
     }
 }

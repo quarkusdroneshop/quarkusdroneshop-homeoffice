@@ -24,6 +24,9 @@ public class KafkaServiceTest {
     @InjectSpy
     KafkaService kafkaService;
 
+    @InjectSpy
+    OrderAssemblyAggregator orderAssemblyAggregator;
+
     @Inject
     @Any
     InMemoryConnector connector;
@@ -36,11 +39,14 @@ public class KafkaServiceTest {
     }
 
     @Test
-    void testOnOrderCreated_isCalled() {
-        InMemorySource<OrderRecord> source = connector.source("orders-created");
-        source.send(buildOrderRecord());
+    void testOnLineItem_isCalled() {
+        InMemorySource<OrderPlacedLineItem> source = connector.source("orders-created");
+        OrderPlacedLineItem event = new OrderPlacedLineItem(
+                "order-1", "WEB", "ATLANTA", null,
+                "item-1", "QDC_A101", "Taro", java.math.BigDecimal.valueOf(135.50), "QDCA10");
+        source.send(event);
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(
-                () -> verify(kafkaService).onOrderCreated(any(OrderRecord.class)));
+                () -> verify(orderAssemblyAggregator).onLineItem(any(OrderPlacedLineItem.class)));
     }
 
     @Test

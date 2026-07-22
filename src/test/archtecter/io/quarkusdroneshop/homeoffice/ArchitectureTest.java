@@ -115,7 +115,10 @@ public class ArchitectureTest {
                 "org.apache.kafka..",
                 "com.fasterxml..",
                 "org.slf4j..",
-                "org.jboss..");
+                "org.jboss..",
+                // dataproduct-order-events (Avro) を読む OrderPlacedLineItemDeserializer 用。
+                "io.apicurio..",
+                "org.apache.avro..");
 
     // =========================================================================
     // 4. 循環依存

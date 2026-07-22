@@ -59,6 +59,18 @@ public class OrderRecord {
     public Instant orderPlacedTime() { return orderPlacedTimestamp; }
     public Instant orderCompletedTime() { return orderCompletedTimestamp; }
 
+    // dataproduct-order-events (明細単位のストリーム) からオンメモリで組み立てるために
+    // 追加した setter 群。Jackson デシリアライズ以外の経路 (OrderAssemblyAggregator) から
+    // プログラム的に OrderRecord を構築する用途。
+    public void setOrderId(String orderId) { this.orderId = orderId; }
+    public void setQdca10LineItems(List<LineItemRecord> qdca10LineItems) { this.qdca10LineItems = qdca10LineItems; }
+    public void setQdca10proLineItems(List<LineItemRecord> qdca10proLineItems) { this.qdca10proLineItems = qdca10proLineItems; }
+    public void setTotal(double total) { this.total = total; }
+    public void setOrderSource(OrderSource orderSource) { this.orderSource = orderSource; }
+    public void setLocation(String location) { this.location = location; }
+    public void setExternalOrderId(String externalOrderId) { this.externalOrderId = externalOrderId; }
+    public void setCustomerLoyaltyId(String customerLoyalty) { this.customerLoyalty = customerLoyalty; }
+
     @Override
     public String toString() {
         return "OrderRecord{" +
