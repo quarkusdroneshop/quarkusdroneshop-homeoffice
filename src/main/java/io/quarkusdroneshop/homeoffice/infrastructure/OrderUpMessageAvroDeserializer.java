@@ -55,7 +55,16 @@ public class OrderUpMessageAvroDeserializer implements Deserializer<OrderUpMessa
             message.lineItemId = asString(lineItem.get("itemId"));
             message.item = asString(lineItem.get("item"));
             message.name = asString(lineItem.get("name"));
-            message.madeBy = asString(lineItem.get("madeBy"));
+            // dataproduct-order-events の lineItem (itemId/item/name/price/lineItemStatus/
+            // assemblyLine) には madeBy フィールドが存在しない(旧 orders-up 専用トピックの
+            // JSON スキーマにのみ存在していたフィールド)。存在しないフィールドを
+            // GenericRecord#get() で取得すると AvroRuntimeException が発生し、このメソッド
+            // 全体が catch されて null を返してしまうため、FULFILLED イベントが一件も
+            // 処理されず preparedBy が常に未設定になっていた。
+            Object madeByField = lineItem.getSchema().getField("madeBy") != null
+                    ? lineItem.get("madeBy")
+                    : null;
+            message.madeBy = asString(madeByField);
             return message;
         } catch (Exception e) {
             logger.warn("Failed to deserialize OrderUpMessage record", e);
