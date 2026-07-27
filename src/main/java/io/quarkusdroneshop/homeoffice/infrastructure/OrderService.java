@@ -132,13 +132,16 @@ public class OrderService {
      */
     private LineItem newLineItem(Item item, BigDecimal price, String preparedBy, String rawId) {
         LineItem lineItem = new LineItem(item, price, preparedBy);
+        // LineItem.id はもう @GeneratedValue ではないため、ここで必ず明示的に設定する。
+        UUID id = null;
         if (rawId != null) {
             try {
-                lineItem.id = UUID.fromString(rawId);
+                id = UUID.fromString(rawId);
             } catch (IllegalArgumentException e) {
-                LOGGER.warn("lineItemId '{}' is not a valid UUID, letting Hibernate generate one", rawId);
+                LOGGER.warn("lineItemId '{}' is not a valid UUID, generating a random one", rawId);
             }
         }
+        lineItem.id = id != null ? id : UUID.randomUUID();
         return lineItem;
     }
 

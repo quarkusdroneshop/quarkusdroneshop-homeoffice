@@ -19,8 +19,11 @@ import java.util.UUID;
 @Table(name="lineItems")
 public class LineItem extends PanacheEntityBase {
 
+    // @GeneratedValue(strategy = GenerationType.UUID) は、id に事前に値を設定していても
+    // persist 時に無条件で新しいランダムUUIDを生成し上書きしてしまうため使用しない
+    // (Kafka の itemId をそのまま主キーとして引き継ぐ設計と両立できなかった)。
+    // id は必ずアプリ側(OrderService#newLineItem)で明示的に設定する。
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     public UUID id;
 
     @ManyToOne(optional = false)
