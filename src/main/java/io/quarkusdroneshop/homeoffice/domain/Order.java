@@ -157,7 +157,13 @@ public class Order extends PanacheEntityBase {
         if (this.lineItems == null) {
             this.lineItems = new ArrayList<>();
         }
-        this.lineItems.add(new LineItem(lineItem.getItem(), lineItem.getPrice(), lineItem.getPreparedBy(), this));
+        // 渡された lineItem を再ラップして新しい LineItem を作っていたため、
+        // 呼び出し元 (OrderService#newLineItem) が明示的に設定した id (Kafka の
+        // itemId 由来) が失われ、LineItem.id が null のまま persist() されて
+        // IdentifierGenerationException になっていた。id を引き継ぐよう修正。
+        LineItem copy = new LineItem(lineItem.getItem(), lineItem.getPrice(), lineItem.getPreparedBy(), this);
+        copy.id = lineItem.id;
+        this.lineItems.add(copy);
     }
 
     public String getOrderId() {
