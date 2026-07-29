@@ -6,8 +6,8 @@ import io.quarkusdroneshop.homeoffice.infrastructure.domain.LineItemRecord;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10LineItem;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.Qdca10proLineItem;
-import io.quarkusdroneshop.homeoffice.viewmodels.ItemSales;
-import io.quarkusdroneshop.homeoffice.viewmodels.StoreServerSales;
+import io.quarkusdroneshop.homeoffice.infrastructure.domain.ItemSales;
+import io.quarkusdroneshop.homeoffice.infrastructure.domain.StoreServerSales;
 import org.junit.jupiter.api.Test;
 
 import jakarta.transaction.Transactional;
