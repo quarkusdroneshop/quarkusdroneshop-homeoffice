@@ -3,7 +3,6 @@ package io.quarkusdroneshop.homeoffice.infrastructure;
 import io.quarkusdroneshop.homeoffice.domain.Item;
 import io.quarkusdroneshop.homeoffice.domain.OrderSource;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.*;
-import io.quarkusdroneshop.homeoffice.viewmodels.ItemSales;
 import io.quarkusdroneshop.homeoffice.viewmodels.LocationOrders;
 import io.quarkusdroneshop.homeoffice.viewmodels.ProductItemSales;
 import io.quarkusdroneshop.homeoffice.viewmodels.ProductSales;

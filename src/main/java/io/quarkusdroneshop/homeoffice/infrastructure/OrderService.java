@@ -8,11 +8,11 @@ import io.quarkusdroneshop.homeoffice.domain.view.LineItemSalesReport;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.LineItemRecord;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.StoreLocation;
-import io.quarkusdroneshop.homeoffice.viewmodels.ItemSales;
+import io.quarkusdroneshop.homeoffice.infrastructure.domain.ItemSales;
+import io.quarkusdroneshop.homeoffice.infrastructure.domain.AverageOrderUpTime;
+import io.quarkusdroneshop.homeoffice.infrastructure.domain.StoreServerSales;
 import io.quarkusdroneshop.homeoffice.viewmodels.ProductItemSales;
-import io.quarkusdroneshop.homeoffice.viewmodels.AverageOrderUpTime;
 import io.quarkusdroneshop.homeoffice.viewmodels.ProductSales;
-import io.quarkusdroneshop.homeoffice.viewmodels.StoreServerSales;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;

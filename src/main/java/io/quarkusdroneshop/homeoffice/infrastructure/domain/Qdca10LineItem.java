@@ -2,7 +2,6 @@ package io.quarkusdroneshop.homeoffice.infrastructure.domain;
 
 import jakarta.persistence.GeneratedValue;
 import io.quarkusdroneshop.homeoffice.domain.Item;
-import io.quarkusdroneshop.homeoffice.viewmodels.StoreServerSales;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import java.math.BigDecimal;
 import jakarta.persistence.Entity;

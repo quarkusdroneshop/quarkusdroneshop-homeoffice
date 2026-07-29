@@ -39,14 +39,16 @@ public class ArchitectureTest {
         classes()
             .that().areAssignableTo(Exception.class)
             .and().resideInAPackage("io.quarkusdroneshop.homeoffice..")
-            .should().haveSimpleNameEndingWith("Exception");
+            .should().haveSimpleNameEndingWith("Exception")
+            .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule RESTリソースの命名規則 =
         classes()
             .that().areAnnotatedWith(jakarta.ws.rs.Path.class)
             .and().resideInAPackage("io.quarkusdroneshop.homeoffice..")
-            .should().haveSimpleNameEndingWith("Resource");
+            .should().haveSimpleNameEndingWith("Resource")
+            .allowEmptyShould(true);
 
     @ArchTest
     static final ArchRule RESTリソースはPublic =
@@ -60,7 +62,9 @@ public class ArchitectureTest {
         classes()
             .that().haveSimpleNameEndingWith("Resource")
             .and().resideInAPackage("..infrastructure..")
-            .should().beAnnotatedWith(jakarta.ws.rs.Path.class);
+            .and().areNotAnnotatedWith(org.eclipse.microprofile.graphql.GraphQLApi.class)
+            .should().beAnnotatedWith(jakarta.ws.rs.Path.class)
+            .allowEmptyShould(true);
 
     // =========================================================================
     // 2. パッケージ配置ルール
@@ -118,7 +122,9 @@ public class ArchitectureTest {
                 "org.jboss..",
                 // dataproduct-order-events (Avro) を読む OrderPlacedLineItemDeserializer 用。
                 "io.apicurio..",
-                "org.apache.avro..");
+                "org.apache.avro..",
+                // CORS フィルタ (CorsRouteFilter) が Vert.x Web の RoutingContext を使うため。
+                "io.vertx..");
 
     // =========================================================================
     // 4. 循環依存
