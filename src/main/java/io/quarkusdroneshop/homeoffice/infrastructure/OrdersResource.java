@@ -893,6 +893,40 @@ public class OrdersResource {
         return analyticsService.getSalesTrendsDaily();
     }
 
+    /**
+     * Item Sales Trends チャート用: dataproduct-real-time-sales-trends (salesTrendsDaily)
+     * を日付範囲・品目別に整形して返す。旧 productSalesByDate (Order/LineItem からの
+     * ローカルDB集計) と同じ形状 (ProductSales/ProductItemSales) で返すことで
+     * フロントエンドの変更を最小限にする。ここで生成するインスタンスは表示専用の
+     * 一時オブジェクトであり永続化しない。
+     */
+    @Query
+    public List<ProductSales> itemSalesTrendsByDate(String startDate, String endDate) {
+        Instant start = Instant.parse(startDate + "T00:00:00Z");
+        Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
+
+        Map<Item, ProductSales> byItem = new EnumMap<>(Item.class);
+        for (io.quarkusdroneshop.homeoffice.viewmodels.SalesTrend trend : analyticsService.getSalesTrendsDaily()) {
+            Instant windowStart = Instant.ofEpochMilli(trend.windowStart);
+            if (windowStart.isBefore(start) || !windowStart.isBefore(end)) {
+                continue;
+            }
+            Item item;
+            try {
+                item = Item.valueOf(trend.item);
+            } catch (IllegalArgumentException e) {
+                continue;
+            }
+            ProductSales productSales = byItem.computeIfAbsent(item, ProductSales::new);
+            productSales.addProductItemSale(new ProductItemSales(
+                item,
+                BigDecimal.valueOf(trend.orderCount),
+                BigDecimal.valueOf(trend.revenue),
+                windowStart));
+        }
+        return new ArrayList<>(byItem.values());
+    }
+
     /** 分析ダッシュボード用: QDCA10 の明細単位リードタイム (PLACED→FULFILLED)。 */
     @Query
     public List<io.quarkusdroneshop.homeoffice.viewmodels.AssemblyLeadTime> qdca10LeadTimes() {
