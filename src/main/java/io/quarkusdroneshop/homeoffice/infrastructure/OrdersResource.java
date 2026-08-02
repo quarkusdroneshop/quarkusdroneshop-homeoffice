@@ -228,31 +228,39 @@ public class OrdersResource {
         }
     }
      */
+    /**
+     * dataproduct-sales-trends-daily (Flink が FULFILLED 明細を日次ウィンドウで
+     * item 別集計したもの) を AnalyticsService のキャッシュ経由で購読し、
+     * 指定期間・全店舗合計を返す。以前はローカル Order/LineItem テーブルを
+     * 直接集計していたが、dataproduct 由来のデータへ統一した。
+     */
     @Query
     public List<ItemSales> getItemSalesTotalsByDate(String startDate, String endDate){
-        Instant functionStart = Instant.now();
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
-        List<Order> orders = Order.findBetween(start, end);
+        long startMillis = start.toEpochMilli();
+        long endMillis = end.toEpochMilli();
 
-        List<LineItem> lineItems = new ArrayList<>();
-        for( Order order : orders){
-            lineItems.addAll(order.getLineItems());
-        }
-
-        List<ItemSales> sales = new ArrayList<>();
-
+        Map<Item, ItemSales> byItem = new HashMap<>();
         for (Item item : Item.values()) {
-            List<LineItem> soldItems = lineItems.stream().filter(i -> i.getItem().name().equals(item.name())).collect(Collectors.toList());
-
-            ItemSales itemSales = new ItemSales();
-            itemSales.item = item;
-            itemSales.salesTotal = soldItems.size();
-            itemSales.revenue = item.getPrice().multiply(BigDecimal.valueOf(itemSales.salesTotal)).doubleValue();
-            sales.add(itemSales);
+            byItem.put(item, new ItemSales(item, 0, 0.0));
         }
+
+        for (io.quarkusdroneshop.homeoffice.viewmodels.SalesTrend trend : analyticsService.getSalesTrendsDaily()) {
+            if (trend.windowStart < startMillis || trend.windowStart >= endMillis) continue;
+            Item item;
+            try {
+                item = Item.valueOf(trend.item);
+            } catch (IllegalArgumentException e) {
+                continue;
+            }
+            ItemSales itemSales = byItem.get(item);
+            itemSales.salesTotal += trend.orderCount;
+            itemSales.revenue += trend.revenue;
+        }
+
+        List<ItemSales> sales = new ArrayList<>(byItem.values());
         sales.sort((itemSales, t1) -> itemSales.item.name().compareTo(t1.item.name()));
-        Instant functionEnd = Instant.now();
         return sales;
     }
 
@@ -351,83 +359,91 @@ public class OrdersResource {
         }
     }
      */
+    /**
+     * dataproduct-sales-trends-daily を AnalyticsService のキャッシュ経由で購読し、
+     * 指定期間・店舗(location)別・組立ライン(assemblyLine = QDCA10/QDCA10PRO を
+     * server 相当として扱う)別に集計する。以前はローカル Order/LineItem テーブルを
+     * 直接集計していたが、dataproduct 由来のデータへ統一した。
+     */
     @Query
     public List<StoreServerSales> getStoreServerSalesByDate(String startDate, String endDate) {
 
         Instant start = Instant.parse(startDate + "T00:00:00Z");
         Instant end = Instant.parse(endDate + "T00:00:00Z").plus(1, ChronoUnit.DAYS);
-        List<StoreServerSales> storeServerSalesList = new ArrayList<>();
+        long startMillis = start.toEpochMilli();
+        long endMillis = end.toEpochMilli();
 
-        for (Store location : Store.values()) {
-            Map<String, Map<Item, ItemSales>> servers = new HashMap<>();
+        // store|server -> item -> ItemSales
+        Map<String, Map<Item, ItemSales>> byStoreServer = new HashMap<>();
 
-            List<Order> orders = Order.findBetweenByLocation(location.name(), start, end);
+        for (io.quarkusdroneshop.homeoffice.viewmodels.SalesTrend trend : analyticsService.getSalesTrendsDaily()) {
+            if (trend.windowStart < startMillis || trend.windowStart >= endMillis) continue;
+            if (trend.location == null || trend.assemblyLine == null) continue;
 
-            for (Order order : orders) {
-                for (LineItem lineItem : order.getLineItems()) {
-                    if (lineItem.getPreparedBy() == null || lineItem.getItem() == null) {
-                        continue; // skip null entries
-                    }
+            Item item;
+            try {
+                item = Item.valueOf(trend.item);
+            } catch (IllegalArgumentException e) {
+                continue;
+            }
 
-                    String server = lineItem.getPreparedBy();
-                    Item item = lineItem.getItem();
-                    BigDecimal price = lineItem.getPrice();
-
-                    servers.putIfAbsent(server, new HashMap<>());
-                    Map<Item, ItemSales> itemMap = servers.get(server);
-
-                    itemMap.compute(item, (k, v) -> {
-                        if (v == null) {
-                            return new ItemSales(item, 1, price.doubleValue());
-                        } else {
-                            v.salesTotal += 1;
-                            v.revenue += price.doubleValue();
-                            return v;
-                        }
-                    });
+            String key = trend.location + "|" + trend.assemblyLine;
+            Map<Item, ItemSales> itemMap = byStoreServer.computeIfAbsent(key, k -> new HashMap<>());
+            itemMap.compute(item, (k, v) -> {
+                if (v == null) {
+                    return new ItemSales(item, trend.orderCount, trend.revenue);
+                } else {
+                    v.salesTotal += trend.orderCount;
+                    v.revenue += trend.revenue;
+                    return v;
                 }
-            }
+            });
+        }
 
-            // MapからStoreServerSalesリストを構築
-            for (Map.Entry<String, Map<Item, ItemSales>> serverEntry : servers.entrySet()) {
-                StoreServerSales serverSales = new StoreServerSales();
-                serverSales.store = location.name();
-                serverSales.server = serverEntry.getKey();
-                serverSales.itemSales = new ArrayList<>(serverEntry.getValue().values());
-                storeServerSalesList.add(serverSales);
-            }
+        List<StoreServerSales> storeServerSalesList = new ArrayList<>();
+        for (Map.Entry<String, Map<Item, ItemSales>> entry : byStoreServer.entrySet()) {
+            String[] parts = entry.getKey().split("\\|", 2);
+            StoreServerSales serverSales = new StoreServerSales();
+            serverSales.store = parts[0];
+            serverSales.server = parts[1];
+            serverSales.itemSales = new ArrayList<>(entry.getValue().values());
+            storeServerSalesList.add(serverSales);
         }
 
         return storeServerSalesList;
     }
 
+    /**
+     * dataproduct-assembly-lead-time-qdca10 / qdca10pro (Flink がジョブ完了イベントから
+     * placedAt/fulfilledAt/leadTimeSeconds を算出したもの) を AnalyticsService の
+     * キャッシュ経由で購読し、指定期間の平均をミリ秒で返す。以前はローカル Order
+     * テーブルを直接集計していたが、dataproduct 由来のデータへ統一した。
+     */
     @Transactional
     @Query
     public int getAverageOrderUpTime(String startDate, String endDate){
         logger.info("### averageOrderUpTime resolver called ###");
-        
+
         Instant now = Instant.now();
-        
+
         // JST → UTC に変換
         ZonedDateTime startJst = LocalDate.parse(startDate).atStartOfDay(ZoneId.of("Asia/Tokyo"));
-        Instant startUtc = startJst.toInstant();
+        long startMillis = startJst.toInstant().toEpochMilli();
 
         ZonedDateTime endJst = LocalDate.parse(endDate).plusDays(1).atStartOfDay(ZoneId.of("Asia/Tokyo"));
-        Instant endUtc = endJst.toInstant();
+        long endMillis = endJst.toInstant().toEpochMilli();
 
-        // 注文取得
-        List<Order> orders = Order.findBetween(startUtc, endUtc);
+        List<io.quarkusdroneshop.homeoffice.viewmodels.AssemblyLeadTime> leadTimes = new ArrayList<>();
+        leadTimes.addAll(analyticsService.getQdca10LeadTimes());
+        leadTimes.addAll(analyticsService.getQdca10proLeadTimes());
 
         double totalMillis = 0;
         int validCount = 0;
 
-        for (Order order : orders) {
-            Instant placed = order.getOrderPlacedTimestamp();
-            Instant completed = order.getOrderCompletedTimestamp();
-            if (placed == null || completed == null) continue;
+        for (io.quarkusdroneshop.homeoffice.viewmodels.AssemblyLeadTime leadTime : leadTimes) {
+            if (leadTime.placedAt < startMillis || leadTime.placedAt >= endMillis) continue;
 
-            // Duration をミリ秒で計算（1ms 未満は無効データとして除外）
-            double millis = Duration.between(placed, completed).toNanos() / 1_000_000.0;
+            double millis = leadTime.leadTimeSeconds * 1000.0;
             if (millis < 1.0) continue;
 
             totalMillis += millis;
