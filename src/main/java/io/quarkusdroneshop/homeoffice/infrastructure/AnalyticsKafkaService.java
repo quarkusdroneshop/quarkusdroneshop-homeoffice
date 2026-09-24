@@ -30,13 +30,15 @@ public class AnalyticsKafkaService {
     @Incoming("sales-trends-5m")
     public void onSalesTrend5m(final GenericRecord record) {
         if (record == null) return;
-        analyticsService.addSalesTrend5m(toSalesTrend(record));
+        SalesTrend trend = toSalesTrend(record);
+        if (trend != null) analyticsService.addSalesTrend5m(trend);
     }
 
     @Incoming("sales-trends-daily")
     public void onSalesTrendDaily(final GenericRecord record) {
         if (record == null) return;
-        analyticsService.addSalesTrendDaily(toSalesTrend(record));
+        SalesTrend trend = toSalesTrend(record);
+        if (trend != null) analyticsService.addSalesTrendDaily(trend);
     }
 
     @Incoming("lead-time-qdca10")
@@ -81,7 +83,14 @@ public class AnalyticsKafkaService {
 
     private SalesTrend toSalesTrend(GenericRecord record) {
         try {
-            String item = record.get("item").toString();
+            Object itemRaw = record.get("item");
+            if (itemRaw == null) {
+                // orders-up の ping (疎通確認) メッセージが誤って集計されると item=null の
+                // ゴミレコードになる。ダッシュボードを汚さないよう読み捨てる。
+                LOGGER.debug("Skipping SalesTrend record with null item: {}", record);
+                return null;
+            }
+            String item = itemRaw.toString();
             long windowStart = (Long) record.get("windowStart");
             long windowEnd = (Long) record.get("windowEnd");
             long orderCount = (Long) record.get("orderCount");

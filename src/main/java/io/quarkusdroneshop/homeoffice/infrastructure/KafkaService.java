@@ -4,6 +4,9 @@ import io.quarkusdroneshop.homeoffice.domain.LineItem;
 import io.quarkusdroneshop.homeoffice.domain.Order;
 import io.quarkusdroneshop.homeoffice.infrastructure.domain.OrderRecord;
 import io.smallrye.reactive.messaging.annotations.Blocking;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
 import org.eclipse.microprofile.reactive.messaging.Channel;
 import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -14,10 +17,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import jakarta.inject.Inject;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import static io.quarkusdroneshop.homeoffice.infrastructure.KafkaTopics.*;
 
@@ -31,11 +38,35 @@ public class KafkaService {
 
     @Inject
     @Channel(QDCA10_RETRY_OUT)
-    Emitter<RetryOrderTicket> qdca10RetryEmitter;
+    Emitter<GenericRecord> qdca10RetryEmitter;
 
     @Inject
     @Channel(QDCA10PRO_RETRY_OUT)
-    Emitter<RetryOrderTicket> qdca10proRetryEmitter;
+    Emitter<GenericRecord> qdca10proRetryEmitter;
+
+    // dataproduct-order-events (order-events Flink job の出力) と同じ Avro スキーマで
+    // ORDER_PLACED イベントを組み立てて再送する。qdca10/qdca10pro は本番プロファイルでは
+    // orders-in ではなくこのトピック (Avro, avro-confluent) しか購読していないため、
+    // 以前のように JSON (RetryOrderTicket) を旧トピック (qdca10-in, dev専用) へ送っても
+    // 誰にも消費されず Retry が事実上何もしていなかった。
+    private static final Schema ORDER_EVENT_SCHEMA = loadOrderEventSchema();
+    private static final Schema LINE_ITEM_SCHEMA = unwrapNullable(ORDER_EVENT_SCHEMA.getField("lineItem").schema());
+
+    private static Schema loadOrderEventSchema() {
+        try (InputStream is = KafkaService.class.getResourceAsStream("/avro/orders-event.avsc")) {
+            return new Schema.Parser().parse(is);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load orders-event.avsc", e);
+        }
+    }
+
+    private static Schema unwrapNullable(Schema schema) {
+        if (schema.getType() != Schema.Type.UNION) return schema;
+        return schema.getTypes().stream()
+            .filter(s -> s.getType() != Schema.Type.NULL)
+            .findFirst()
+            .orElseThrow();
+    }
 
     // orders-created (dataproduct-order-events) の取り込みは OrderAssemblyAggregator に
     // 移管した。明細単位で届くイベントを orderId ごとに集約してから OrderService.process() を
@@ -157,14 +188,41 @@ public class KafkaService {
 
     private void resendTicket(String orderId, LineItem lineItem, String displayName) {
         String upstreamItem = lineItem.getItem().name();
-        RetryOrderTicket ticket = new RetryOrderTicket(orderId, lineItem.id.toString(), upstreamItem, displayName);
+        String assemblyLine = upstreamItem.contains("_Pro") ? "QDCA10PRO" : "QDCA10";
 
-        if (upstreamItem.contains("_Pro")) {
-            LOGGER.info("Re-publishing retry ticket to qdca10pro-in: {}", ticket.item);
-            qdca10proRetryEmitter.send(ticket);
+        GenericRecord lineItemRecord = new GenericData.Record(LINE_ITEM_SCHEMA);
+        lineItemRecord.put("itemId", lineItem.id.toString());
+        lineItemRecord.put("item", upstreamItem);
+        lineItemRecord.put("name", displayName);
+        BigDecimal price = lineItem.getPrice() != null ? lineItem.getPrice() : BigDecimal.ZERO;
+        lineItemRecord.put("price", decimalToBytes(price.setScale(2, java.math.RoundingMode.HALF_UP)));
+        lineItemRecord.put("lineItemStatus", "PLACED");
+        lineItemRecord.put("assemblyLine", assemblyLine);
+        lineItemRecord.put("madeBy", null);
+
+        GenericRecord orderEvent = new GenericData.Record(ORDER_EVENT_SCHEMA);
+        orderEvent.put("eventId", UUID.randomUUID().toString());
+        orderEvent.put("orderId", orderId);
+        orderEvent.put("eventType", "ORDER_PLACED");
+        orderEvent.put("eventTimestamp", Instant.now().toEpochMilli());
+        orderEvent.put("orderSource", null);
+        orderEvent.put("location", null);
+        orderEvent.put("loyaltyMemberId", null);
+        orderEvent.put("orderStatus", "PLACED");
+        orderEvent.put("lineItem", lineItemRecord);
+        orderEvent.put("sourceDomain", "homeoffice-retry");
+        orderEvent.put("sourceTopic", "order-retry-in");
+
+        if ("QDCA10PRO".equals(assemblyLine)) {
+            LOGGER.info("Re-publishing retry ORDER_PLACED event to qdca10pro: {}", upstreamItem);
+            qdca10proRetryEmitter.send(orderEvent);
         } else {
-            LOGGER.info("Re-publishing retry ticket to qdca10-in: {}", ticket.item);
-            qdca10RetryEmitter.send(ticket);
+            LOGGER.info("Re-publishing retry ORDER_PLACED event to qdca10: {}", upstreamItem);
+            qdca10RetryEmitter.send(orderEvent);
         }
+    }
+
+    private static ByteBuffer decimalToBytes(BigDecimal value) {
+        return ByteBuffer.wrap(value.unscaledValue().toByteArray());
     }
 }
